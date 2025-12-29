@@ -5,4 +5,4 @@ open the file by doing "open ./family-feud-copilot.html" in the command line or 
 Dghose created a branch of the main codebase for learning.
 Dghose added this after the first PR was Approved.
 
-Dia approved the PR.
+Dia approved the PR. Dia added more changes. 
