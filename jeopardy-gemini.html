@@ -20,7 +20,7 @@
         /* The Main Board Grid */
         #board {
             display: grid;
-            grid-template-columns: repeat(6, 1fr);
+            grid-template-columns: repeat(5, 1fr);
             grid-template-rows: 80px repeat(5, 1fr); /* Header + 5 rows */
             gap: 8px;
             width: 95vw;
@@ -43,9 +43,9 @@
         /* Category Headers */
         .category {
             color: white;
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             text-transform: uppercase;
-            text-shadow: 1px 1px 1px black;
+            text-shadow: 2px 2px 2px black;
             font-weight: bold;
             border-bottom: 4px solid black;
         }
@@ -85,7 +85,7 @@
             align-items: center;
             justify-content: center;
             z-index: 1000;
-            padding: 50px;
+            padding: 20px;
             box-sizing: border-box;
             text-align: center;
         }
@@ -95,9 +95,17 @@
             color: white;
             text-transform: uppercase;
             text-shadow: 4px 4px 4px black;
-            margin-bottom: 50px;
-            max-width: 80%;
-            line-height: 1.2;
+            margin: 20px 0;
+            max-width: 90%;
+            line-height: 1.3;
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #overlay-text.long-text {
+            font-size: 3rem;
         }
 
         .btn {
@@ -111,6 +119,7 @@
             font-family: inherit;
             font-weight: bold;
             box-shadow: 2px 2px 5px black;
+            margin-top: 20px;
         }
 
         .btn:hover {
@@ -126,72 +135,64 @@
 
     <div id="overlay">
         <div id="overlay-text"></div>
-        <button id="show-question-btn" class="btn" style="display:none;">Show Question</button>
-        <button id="reveal-btn" class="btn">Show Answer</button>
-        <button id="continue-btn" class="btn" style="display:none;">Continue</button>
+        <div>
+            <button id="show-question-btn" class="btn" style="display:none;">Show Question</button>
+            <button id="reveal-btn" class="btn">Show Answer</button>
+            <button id="continue-btn" class="btn" style="display:none;">Continue</button>
+        </div>
     </div>
 
     <script>
         // --- CONFIGURATION: EDIT YOUR CATEGORIES AND QUESTIONS HERE ---
         const gameData = [
             {
-                name: "History",
+                name: "Buzzer Beaters & Big Leagues",
                 questions: [
-                    { value: 100, question: "Who was the first President of the United States?", answer: "George Washington", isAnswered: false, isDailyDouble: false },
-                    { value: 200, question: "In which year did World War II end?", answer: "1945", isAnswered: false, isDailyDouble: false },
-                    { value: 300, question: "Who wrote the Declaration of Independence?", answer: "Thomas Jefferson", isAnswered: false, isDailyDouble: false },
-                    { value: 400, question: "Which ancient civilization built Machu Picchu?", answer: "The Incas", isAnswered: false, isDailyDouble: false },
-                    { value: 500, question: "The war between North and South Korea started in this year.", answer: "1950", isAnswered: false, isDailyDouble: false }
+                    { value: 100, question: "Jody Conradt and Colt McCoy are in this university’s Hall of Fame", answer: "UT Austin", isAnswered: false, isDailyDouble: false },
+                    { value: 200, question: "This city is tied with Houston and Minneapolis for most WNBA championships.", answer: "Seattle", isAnswered: false, isDailyDouble: false },
+                    { value: 300, question: "This Houston Astro hit the walk off home run against the New York Yankees in 2019 to send them to the World Series.", answer: "Jose Altuve", isAnswered: false, isDailyDouble: false },
+                    { value: 400, question: "This NBA star has 4 kids by 4 different women, despite texting one of them “Get da abortion lol”", answer: "Anthony Edwards", isAnswered: false, isDailyDouble: false },
+                    { value: 500, question: "Despite its name, in the 2025 - 2026 season, this power conference has 16 teams.", answer: "Big 12", isAnswered: false, isDailyDouble: false }
                 ]
             },
             {
-                name: "Science",
+                name: "Emerald City Essentials",
                 questions: [
-                    { value: 100, question: "H2O is the chemical formula for what?", answer: "Water", isAnswered: false, isDailyDouble: false },
-                    { value: 200, question: "Which planet is closest to the sun?", answer: "Mercury", isAnswered: false, isDailyDouble: false },
-                    { value: 300, question: "What is known as the powerhouse of the cell?", answer: "Mitochondria", isAnswered: false, isDailyDouble: false },
-                    { value: 400, question: "What is the chemical symbol for Gold?", answer: "Au", isAnswered: false, isDailyDouble: false },
-                    { value: 500, question: "What is the hardest natural substance on Earth?", answer: "Diamond", isAnswered: false, isDailyDouble: false }
+                    { value: 100, question: "This statewide ban on the manufacturing and sale of liquor started 4 years before it was enacted nationwide.", answer: "Prohibition", isAnswered: false, isDailyDouble: false },
+                    { value: 200, question: "This item, often seen during the summer with Amazon interns, was invented by a student during their time at UW.", answer: "Backpack", isAnswered: false, isDailyDouble: false },
+                    { value: 300, question: "This 18 story building opened to residents in 1962 with monthly rent starting at $110.", answer: "Panorama Apartments", isAnswered: false, isDailyDouble: false },
+                    { value: 400, question: "This 2025 movie had a $150 million brand partnership budget, including collabs with Lush, Ruggable, Owala, and Absolut Vodka.", answer: "Wicked", isAnswered: false, isDailyDouble: false },
+                    { value: 500, question: "This President’s wealth started when his grandfather moved to Seattle in 1891 and opened a bar/restaurant/brothel in what is now known as Pioneer Square.", answer: "Trump", isAnswered: false, isDailyDouble: false }
                 ]
             },
             {
-                name: "Geography",
+                name: "Fame Game",
                 questions: [
-                    { value: 100, question: "What is the capital of France?", answer: "Paris", isAnswered: false, isDailyDouble: false },
-                    { value: 200, question: "Which is the largest ocean on Earth?", answer: "Pacific Ocean", isAnswered: false, isDailyDouble: false },
-                    { value: 300, question: "Which continent has the most countries?", answer: "Africa", isAnswered: false, isDailyDouble: false },
-                    { value: 400, question: "What is the longest river in the world?", answer: "The Nile", isAnswered: false, isDailyDouble: false },
-                    { value: 500, question: "What is the smallest country in the world?", answer: "Vatican City", isAnswered: false, isDailyDouble: false }
+                    { value: 100, question: "This England-born Albanian woman discovered she was “levitating” to climb the music charts in 2021.", answer: "Dua Lipa", isAnswered: false, isDailyDouble: false },
+                    { value: 200, question: "A clothing maker + something that moves fast.", answer: "Taylor Swift", isAnswered: false, isDailyDouble: false },
+                    { value: 300, question: "This recent Golden Globes winner is rumored to have spread chlamydia during his time at NYU.", answer: "Timothee Chalamet", isAnswered: false, isDailyDouble: false },
+                    { value: 400, question: "Sweta got scammed when buying tickets to see this British artist live.", answer: "Harry Styles", isAnswered: false, isDailyDouble: false },
+                    { value: 500, question: "This artist’s song with the lyrics “Reach for the stars, and if you don't grab them, at least you'll fall on top of the world” was sampled in Pitch Perfect.", answer: "Pitbull", isAnswered: false, isDailyDouble: false }
                 ]
             },
             {
-                name: "Movies",
+                name: "Must-See TV",
                 questions: [
-                    { value: 100, question: "Which movie features the quote 'I'll be back'?", answer: "The Terminator", isAnswered: false, isDailyDouble: false },
-                    { value: 200, question: "Who played Jack Dawson in Titanic?", answer: "Leonardo DiCaprio", isAnswered: false, isDailyDouble: false },
-                    { value: 300, question: "What was the first feature-length animated movie released by Disney?", answer: "Snow White and the Seven Dwarfs", isAnswered: false, isDailyDouble: false },
-                    { value: 400, question: "Who directed the movie Pulp Fiction?", answer: "Quentin Tarantino", isAnswered: false, isDailyDouble: false },
-                    { value: 500, question: "Which movie won the first Academy Award for Best Picture?", answer: "Wings", isAnswered: false, isDailyDouble: false }
+                    { value: 100, question: "This show shares its title with a genre of electronic dance music.", answer: "House", isAnswered: false, isDailyDouble: false },
+                    { value: 200, question: "This sitcom famously withholds the identity promised in its title for nine seasons.", answer: "How I Met Your Mother", isAnswered: false, isDailyDouble: false },
+                    { value: 300, question: "A warm season + a personal glow-up.", answer: "The Summer I Turned Pretty?", isAnswered: false, isDailyDouble: false },
+                    { value: 400, question: "The title of this Apple TV+ show literally means “the act of being cut off.”", answer: "Severance", isAnswered: false, isDailyDouble: false },
+                    { value: 500, question: "This show is the longest running primetime medical drama, despite its namesake character no longer being a series regular.", answer: "Grey’s Anatomy", isAnswered: false, isDailyDouble: false }
                 ]
             },
             {
-                name: "Music",
+                name: "Side Quests: On/Off the Map",
                 questions: [
-                    { value: 100, question: "Who is known as the King of Pop?", answer: "Michael Jackson", isAnswered: false, isDailyDouble: false },
-                    { value: 200, question: "Which band consisted of John, Paul, George, and Ringo?", answer: "The Beatles", isAnswered: false, isDailyDouble: false },
-                    { value: 300, question: "Who recorded the hit song 'Bohemian Rhapsody'?", answer: "Queen", isAnswered: false, isDailyDouble: false },
-                    { value: 400, question: "Who was the first winner of American Idol?", answer: "Kelly Clarkson", isAnswered: false, isDailyDouble: false },
-                    { value: 500, question: "Which classical composer wrote 'The Four Seasons'?", answer: "Antonio Vivaldi", isAnswered: false, isDailyDouble: false }
-                ]
-            },
-            {
-                name: "Random",
-                questions: [
-                    { value: 100, question: "How many legs does a spider have?", answer: "Eight", isAnswered: false, isDailyDouble: false },
-                    { value: 200, question: "What color is a ruby?", answer: "Red", isAnswered: false, isDailyDouble: false },
-                    { value: 300, question: "What does the Roman numeral 'L' stand for?", answer: "50", isAnswered: false, isDailyDouble: false },
-                    { value: 400, question: "What is the currency of Japan?", answer: "Yen", isAnswered: false, isDailyDouble: false },
-                    { value: 500, question: "What is a group of crows called?", answer: "A murder", isAnswered: false, isDailyDouble: false }
+                    { value: 100, question: "This park where the Cherry Blossom Run occurs was also where President Joe Biden signed an executive order to protect forests on federal lands.", answer: "Seward Park", isAnswered: false, isDailyDouble: false },
+                    { value: 200, question: "The fastest run up Seattle’s Space Needle was completed in 3 minutes and 35 seconds (not by Sweta); this is the number of steps climbed to reach the top.", answer: "832", isAnswered: false, isDailyDouble: false },
+                    { value: 300, question: "This is Sweta’s favorite mountain range and feeds the wettest temperate rainforest in the contiguous United States.", answer: "Olympic Mountain Range", isAnswered: false, isDailyDouble: false },
+                    { value: 400, question: "Sweta has gone on this many Hinge dates since moving to Seattle", answer: "9", isAnswered: false, isDailyDouble: false },
+                    { value: 500, question: "This country hosted a Formula 1 Grand Prix attended by Sweta in 2023 and will soon have its first queen (by birth) since 1868.", answer: "Spain", isAnswered: false, isDailyDouble: false },
                 ]
             }
         ];
@@ -199,7 +200,10 @@
         // Set a random Daily Double
         const randomCatIdx = Math.floor(Math.random() * gameData.length);
         const randomQIdx = Math.floor(Math.random() * 5);
-        gameData[randomCatIdx].questions[randomQIdx].isDailyDouble = true;
+        if (gameData[randomCatIdx] && gameData[randomCatIdx].questions[randomQIdx]) {
+            gameData[randomCatIdx].questions[randomQIdx].isDailyDouble = true;
+        }
+
 
         const board = document.getElementById('board');
         const overlay = document.getElementById('overlay');
@@ -210,6 +214,16 @@
 
         let currentCategoryIndex = -1;
         let currentQuestionIndex = -1;
+
+        function setOverlayText(text) {
+            overlayText.innerHTML = `<span>${text}</span>`; // Wrap in span for centering
+            const threshold = 80; // Character threshold for long text
+            if (text.length > threshold) {
+                overlayText.classList.add('long-text');
+            } else {
+                overlayText.classList.remove('long-text');
+            }
+        }
 
         function initBoard() {
             board.innerHTML = '';
@@ -231,7 +245,6 @@
                     
                     if (q.isAnswered) {
                         cell.classList.add('disabled');
-                        // cell.textContent = ''; // Uncomment to hide value completely
                         cell.textContent = `$${q.value}`; 
                     } else {
                         cell.textContent = `$${q.value}`;
@@ -253,10 +266,10 @@
             showQuestionBtn.style.display = 'none';
 
             if (q.isDailyDouble) {
-                overlayText.textContent = "DAILY DOUBLE!";
+                setOverlayText("DAILY DOUBLE!");
                 showQuestionBtn.style.display = 'inline-block';
             } else {
-                overlayText.textContent = q.question;
+                setOverlayText(q.question);
                 revealBtn.style.display = 'inline-block';
             }
         }
@@ -264,19 +277,21 @@
         showQuestionBtn.onclick = () => {
             const q = gameData[currentCategoryIndex].questions[currentQuestionIndex];
             showQuestionBtn.style.display = 'none';
-            overlayText.textContent = q.question;
+            setOverlayText(q.question);
             revealBtn.style.display = 'inline-block';
         };
 
         revealBtn.onclick = () => {
             const q = gameData[currentCategoryIndex].questions[currentQuestionIndex];
-            overlayText.textContent = q.answer;
+            setOverlayText(q.answer);
             revealBtn.style.display = 'none';
             continueBtn.style.display = 'inline-block';
         };
 
         continueBtn.onclick = () => {
-            gameData[currentCategoryIndex].questions[currentQuestionIndex].isAnswered = true;
+            if (currentCategoryIndex > -1 && currentQuestionIndex > -1) {
+                gameData[currentCategoryIndex].questions[currentQuestionIndex].isAnswered = true;
+            }
             overlay.style.display = 'none';
             initBoard();
         };
