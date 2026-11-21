@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Clue Pyramid</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,8 95,90 5,90' fill='%23ffc83d'/%3E%3Cpolygon points='50,30 78,80 22,80' fill='%23140b45'/%3E%3C/svg%3E">
+<style>
+/* =========================================================
+   THEME – flat, minimal
+   ========================================================= */
+:root{
+  --bg:#15172b;
+  --panel:#1f2240;
+  --panel-2:#2a2e52;
+  --line:#33375e;
+  --text:#ffffff;
+  --muted:#9ca0c4;
+  --gold:#f5b400;
+  --t1:#3b9cff;
+  --t2:#ff4f8b;
+  --good:#22c55e;
+  --warn:#f5b400;
+  --bad:#ef4444;
+  --font:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--font);overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+button{font-family:inherit}
+#app{min-height:100vh;display:flex;flex-direction:column}
+main{flex:1;display:flex;flex-direction:column}
+.screen{display:none;flex:1;flex-direction:column;align-items:center;padding:24px 16px 32px}
+.screen.active{display:flex;animation:fadeIn .25s ease both}
+[hidden]{display:none !important}
+
+/* ---------- buttons ---------- */
+.btn{
+  font:700 1.05rem/1 var(--font);border:0;border-radius:12px;padding:16px 24px;min-height:56px;cursor:pointer;
+  color:#fff;background:var(--panel-2);display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  transition:opacity .15s,transform .1s;touch-action:manipulation;
+}
+.btn:hover{opacity:.9}
+.btn:active{transform:scale(.98)}
+.btn:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.btn[disabled]{opacity:.35;cursor:not-allowed}
+.btn-gold{background:var(--gold);color:#1a1300}
+.btn-correct{background:var(--good);color:#06240f}
+.btn-skip{background:var(--panel-2);color:#fff}
+.btn-end{background:transparent;border:2px solid var(--line);color:var(--muted)}
+.btn-end.armed{background:var(--bad);border-color:var(--bad);color:#fff}
+.btn-ghost{background:transparent;border:2px solid var(--line);color:var(--text)}
+.btn-xl{font-size:1.25rem;padding:20px 40px;min-height:64px}
+
+/* ---------- scorebar ---------- */
+.scorebar{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:stretch;padding:12px 16px;background:var(--bg);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.team-score{position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 18px;border-radius:12px;background:var(--panel);border:2px solid transparent;min-width:0;transition:border-color .2s}
+.team-score.t2{flex-direction:row-reverse}
+.ts-name{font-weight:700;font-size:clamp(1rem,2vw,1.3rem);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ts-score{font-weight:800;font-size:clamp(1.8rem,4vw,2.8rem);font-variant-numeric:tabular-nums}
+.team-score.t1 .ts-score{color:var(--t1)}
+.team-score.t2 .ts-score{color:var(--t2)}
+.team-score.t1.active{border-color:var(--t1)}
+.team-score.t2.active{border-color:var(--t2)}
+.ts-score.bump{animation:bump .4s ease}
+.floater{position:absolute;font-weight:800;font-size:1.4rem;color:var(--good);pointer-events:none;animation:floatUp .9s ease-out forwards}
+.sb-mid{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.sb-round{font-weight:600;font-size:.95rem;color:var(--muted)}
+.sb-tools{display:flex;gap:6px}
+.sb-tools button{background:var(--panel);border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:6px 12px;font-size:1rem;cursor:pointer;min-height:34px}
+.sb-tools button:hover{color:#fff}
+
+/* ---------- setup ---------- */
+.setup{width:min(760px,100%)}
+.logo{text-align:center;margin:24px 0 28px}
+.logo h1{margin:0;font-weight:800;font-size:clamp(2.4rem,7vw,4rem);color:var(--gold)}
+.setup-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card{background:var(--panel);border-radius:14px;padding:18px}
+.team-card{border-top:4px solid}
+.team-card.t1{border-top-color:var(--t1)}
+.team-card.t2{border-top-color:var(--t2)}
+.card h2{margin:0 0 12px;font-size:.95rem;font-weight:700;color:var(--muted)}
+.field{display:block}
+.field input[type=text]{width:100%;padding:14px;border-radius:10px;border:2px solid var(--line);background:var(--bg);color:#fff;font:600 1.1rem var(--font);outline:none}
+.field input[type=text]:focus{border-color:var(--gold)}
+.settings{grid-column:1/-1;display:flex;align-items:center;justify-content:center}
+.stepper{display:flex;align-items:center;gap:8px}
+.stepper button{width:46px;height:46px;border-radius:10px;border:0;background:var(--panel-2);color:#fff;font-size:1.4rem;font-weight:700;cursor:pointer}
+.stepper input{width:74px;height:46px;text-align:center;border-radius:10px;border:2px solid var(--line);background:var(--bg);color:#fff;font:700 1.25rem var(--font);-moz-appearance:textfield}
+.stepper input::-webkit-outer-spin-button,.stepper input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.stepper em{font-style:normal;color:var(--muted);font-weight:600;margin-left:4px}
+.setup-actions{grid-column:1/-1;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+
+/* ---------- board ---------- */
+.upnext{text-align:center;margin:8px 0 22px}
+.un-team{font-weight:800;font-size:clamp(1.8rem,4.5vw,2.8rem)}
+.un-team.t1{color:var(--t1)}
+.un-team.t2{color:var(--t2)}
+.un-label{margin-top:4px;color:var(--muted);font-weight:600}
+.pyramid{--tw:clamp(150px,25vw,270px);--th:clamp(90px,12vh,116px);display:flex;flex-direction:column;align-items:center;gap:14px;width:min(960px,100%)}
+.prow{display:flex;gap:14px;justify-content:center;width:100%}
+.tile{
+  flex:0 1 var(--tw);min-height:var(--th);padding:14px;border-radius:12px;border:0;background:var(--panel-2);color:#fff;
+  font:700 clamp(.95rem,1.6vw,1.15rem)/1.2 var(--font);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;
+  transition:background .15s,opacity .2s,transform .15s;animation:fadeIn .3s backwards;animation-delay:calc(var(--d) * 50ms);
+}
+.tile:not(.played):hover{background:#363b68}
+.tile:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.tile-name{text-wrap:balance}
+.tile.played{background:var(--panel);color:var(--muted);cursor:default;opacity:.6}
+.tile-done{font-size:.8rem;font-weight:700}
+.tile.played.t1 .tile-done{color:var(--t1)}
+.tile.played.t2 .tile-done{color:var(--t2)}
+.tile.picked{background:var(--gold);color:#1a1300;transform:scale(1.05)}
+.pyramid.choosing .tile:not(.picked){opacity:.3}
+
+/* ---------- play ---------- */
+.play{width:min(1120px,100%);display:flex;flex-direction:column;gap:18px}
+.play-head{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}
+.ph-team{font-weight:700;font-size:1rem}
+.ph-team.t1{color:var(--t1)}
+.ph-team.t2{color:var(--t2)}
+#ph-cat{font-weight:800;font-size:clamp(1.5rem,3.4vw,2.3rem);text-wrap:balance}
+.play-main{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center}
+.timer{position:relative;width:clamp(160px,20vw,240px);aspect-ratio:1/1}
+.timer svg{width:100%;height:100%;transform:rotate(-90deg)}
+.timer circle{fill:none;stroke-width:8}
+.timer .face{fill:none;stroke:none}
+.timer .track{stroke:var(--panel-2)}
+.timer .ring{stroke:var(--gold);stroke-linecap:round;transition:stroke .2s}
+.timer-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.timer-num b{font-weight:800;font-size:clamp(3.4rem,7vw,5.8rem);line-height:1;font-variant-numeric:tabular-nums}
+.timer-num small{font-size:.8rem;color:var(--muted);margin-top:2px}
+.timer.warn .ring{stroke:var(--bad)}
+.timer.warn .timer-num b{color:var(--bad)}
+.answer-zone{display:flex;flex-direction:column;gap:12px;min-width:0}
+.answer-label{min-height:18px;font-weight:700;font-size:.9rem;display:flex;justify-content:space-between}
+.answer-label .rev{color:var(--warn)}
+.answer-card{min-height:clamp(180px,30vh,300px);border-radius:16px;padding:24px;background:#fff;color:#15172b;display:grid;place-items:center;border:4px solid transparent;transition:border-color .2s}
+.answer-card.revisit{border-color:var(--warn)}
+.answer-card.covered{background:var(--panel);color:#fff}
+.answer-card.good{animation:goodFlash .35s ease}
+.answer-card.skipfx{animation:skipFx .25s ease}
+.answer-text{font-weight:800;font-size:clamp(2.2rem,5.6vw,4.6rem);line-height:1.05;text-align:center;text-wrap:balance;word-break:break-word}
+.answer-text.in{animation:wordIn .25s ease}
+.cover-msg{text-align:center}
+.cover-msg .big{font-weight:800;font-size:clamp(1.4rem,3.2vw,2.2rem)}
+.cover-msg .sm{margin-top:8px;color:var(--muted);font-weight:600}
+.progress{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.dots{display:flex;gap:8px;flex-wrap:wrap}
+.dot{width:clamp(26px,3.2vw,34px);height:clamp(26px,3.2vw,34px);border-radius:50%;display:grid;place-items:center;font-size:.8rem;font-weight:700;background:var(--panel);color:var(--muted);border:2px solid transparent}
+.dot.correct{background:var(--good);color:#06240f}
+.dot.skipped{background:transparent;border-color:var(--warn);color:var(--warn)}
+.dot.current{border-color:#fff;color:#fff}
+.count{font-weight:800;font-size:clamp(1.8rem,3.6vw,2.4rem);font-variant-numeric:tabular-nums;color:var(--muted)}
+.count b{color:var(--good)}
+.controls{display:grid;grid-template-columns:1fr 1.6fr 1fr;gap:14px}
+.controls .btn{min-height:76px;font-size:clamp(1rem,2vw,1.25rem)}
+.ready{display:flex;flex-direction:column;align-items:center;gap:10px}
+.play.is-ready .controls,.play.is-ready .keys{display:none}
+.play:not(.is-ready) .ready{display:none}
+.play.over .controls .btn{pointer-events:none;opacity:.35}
+.keys{margin:0;text-align:center;color:var(--muted);font-size:.85rem}
+.linkbtn{background:none;border:0;color:var(--muted);font:600 .9rem var(--font);cursor:pointer;text-decoration:underline;padding:10px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(16px);opacity:0;z-index:60;background:#fff;color:#15172b;font-weight:700;padding:12px 20px;border-radius:10px;transition:all .25s;pointer-events:none;max-width:calc(100% - 32px);text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.stamp{position:fixed;inset:0;display:grid;place-items:center;pointer-events:none;z-index:40;opacity:0}
+.stamp span{font-weight:800;font-size:clamp(3.5rem,12vw,8rem);padding:12px 36px;border-radius:16px;background:var(--bg);border:6px solid currentColor}
+.stamp.time span{color:var(--bad)}
+.stamp.perfect span{color:var(--gold)}
+.stamp.show{animation:stamp 1.5s ease forwards}
+
+/* ---------- modal ---------- */
+.modal{position:fixed;inset:0;z-index:50;display:none;place-items:center;padding:16px;background:rgba(10,11,24,.85)}
+.modal.open{display:grid}
+.modal-card{width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto;border-radius:16px;padding:26px;background:var(--panel);border-top:6px solid var(--gold);animation:fadeIn .2s ease}
+.modal-card.t1{border-top-color:var(--t1)}
+.modal-card.t2{border-top-color:var(--t2)}
+.sum-kicker{text-align:center;color:var(--muted);font-weight:600}
+.sum-title{text-align:center;font-weight:800;font-size:clamp(1.6rem,4.5vw,2.4rem);margin:6px 0}
+.sum-points{text-align:center;font-weight:800;font-size:clamp(3.2rem,9vw,4.8rem);line-height:1;color:var(--gold);margin:8px 0}
+.sum-sub{text-align:center;color:var(--muted);font-weight:600;margin-bottom:18px}
+.mini-scores{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.mini{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;background:var(--bg);border:2px solid transparent}
+.mini .n{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mini .s{font-weight:800;font-size:1.7rem;font-variant-numeric:tabular-nums}
+.mini.t1 .s{color:var(--t1)}
+.mini.t2 .s{color:var(--t2)}
+.mini.t1.hl{border-color:var(--t1)}
+.mini.t2.hl{border-color:var(--t2)}
+.modal-actions{display:flex;flex-direction:column;align-items:center;gap:10px}
+.next-up{color:var(--muted);text-align:center}
+.next-up b{color:#fff}
+
+/* ---------- final ---------- */
+.results{width:min(760px,100%);text-align:center;margin-top:24px}
+.winner-name{font-weight:800;font-size:clamp(2.4rem,7vw,4.4rem);line-height:1.05;margin:0 0 8px;animation:winnerIn .5s ease both}
+.winner-name.t1{color:var(--t1)}
+.winner-name.t2{color:var(--t2)}
+.winner-name.tie{color:var(--gold)}
+.results .lead{color:var(--muted);font-weight:600;font-size:1.1rem;margin:0 0 24px}
+.res-teams{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+.res-team{border-radius:14px;padding:20px;background:var(--panel);border:2px solid transparent}
+.res-team h3{margin:0 0 6px;font-weight:700;font-size:1.15rem}
+.res-team .big{font-weight:800;font-size:clamp(3rem,8vw,4.5rem);line-height:1}
+.res-team.t1 .big{color:var(--t1)}
+.res-team.t2 .big{color:var(--t2)}
+.res-team.winner.t1{border-color:var(--t1)}
+.res-team.winner.t2{border-color:var(--t2)}
+.actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:70;width:100%;height:100%}
+
+/* ---------- animations ---------- */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes bump{50%{transform:scale(1.2)}}
+@keyframes floatUp{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-40px)}}
+@keyframes wordIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes goodFlash{0%{border-color:var(--good)}100%{border-color:transparent}}
+@keyframes skipFx{30%{transform:translateX(-10px)}60%{transform:translateX(6px)}}
+@keyframes stamp{0%{opacity:0;transform:scale(1.4)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0}}
+@keyframes winnerIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:none}}
+
+/* ---------- responsive ---------- */
+@media (max-width:760px){
+  .setup-grid,.res-teams,.mini-scores{grid-template-columns:1fr}
+  .play-main{grid-template-columns:1fr;justify-items:center}
+  .answer-zone{width:100%}
+  .timer{width:clamp(130px,36vw,180px)}
+  .controls{grid-template-columns:1fr 1fr}
+  .controls #btn-correct{grid-column:1/-1;order:-1}
+  .controls .btn{min-height:66px}
+  .scorebar{grid-template-columns:1fr 1fr;gap:8px;padding:10px 12px}
+  .sb-mid{grid-column:1/-1;order:-1;flex-direction:row;gap:12px}
+  .team-score{padding:8px 12px}
+  .pyramid{--tw:31vw;gap:8px}
+  .prow{gap:8px}
+  .tile{padding:10px 6px;font-size:.8rem}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ===================== SCOREBAR ===================== -->
+  <header id="scorebar" class="scorebar" hidden>
+    <div class="team-score t1" id="sb-0">
+      <div class="ts-name"></div>
+      <div class="ts-score" data-v="0">0</div>
+    </div>
+    <div class="sb-mid">
+      <div class="sb-round" id="sb-cat"></div>
+      <div class="sb-tools">
+        <button type="button" id="btn-sound" title="Toggle sound">🔊</button>
+        <button type="button" id="btn-quit" title="Quit game">✕</button>
+      </div>
+    </div>
+    <div class="team-score t2" id="sb-1">
+      <div class="ts-name"></div>
+      <div class="ts-score" data-v="0">0</div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ===================== SETUP ===================== -->
+    <section id="scr-setup" class="screen active">
+      <div class="setup">
+        <div class="logo">
+          <h1>Clue Pyramid</h1>
+        </div>
+
+        <form id="setup-form" class="setup-grid" autocomplete="off">
+          <div class="card team-card t1">
+            <h2>Team 1</h2>
+            <label class="field"><input type="text" id="t0-name" maxlength="24" placeholder="Team 1" aria-label="Team 1 name"></label>
+          </div>
+          <div class="card team-card t2">
+            <h2>Team 2</h2>
+            <label class="field"><input type="text" id="t1-name" maxlength="24" placeholder="Team 2" aria-label="Team 2 name"></label>
+          </div>
+
+          <div class="card settings">
+            <div class="stepper">
+              <button type="button" data-target="cfg-dur" data-step="-5" aria-label="Less time">−</button>
+              <input type="number" id="cfg-dur" min="10" max="180" step="5" value="30" aria-label="Seconds per category">
+              <button type="button" data-target="cfg-dur" data-step="5" aria-label="More time">+</button>
+              <em>seconds per category</em>
+            </div>
+          </div>
+
+          <div class="setup-actions">
+            <button type="button" id="btn-resume" class="btn btn-ghost" hidden>↺ Resume saved game</button>
+            <button type="submit" class="btn btn-gold btn-xl">Start the Game ▶</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ===================== BOARD ===================== -->
+    <section id="scr-board" class="screen">
+      <div class="upnext" id="upnext"></div>
+      <div class="pyramid" id="pyramid"></div>
+    </section>
+
+    <!-- ===================== PLAY ===================== -->
+    <section id="scr-play" class="screen">
+      <div class="play is-ready" id="play">
+        <div class="play-head">
+          <div class="ph-team" id="ph-team"></div>
+          <div class="ph-cat"><div id="ph-cat"></div></div>
+        </div>
+
+        <div class="play-main">
+          <div class="timer" id="timer">
+            <svg viewBox="0 0 120 120" aria-hidden="true">
+              <circle class="face" cx="60" cy="60" r="50"/>
+              <circle class="track" cx="60" cy="60" r="54"/>
+              <circle class="ring" id="timer-ring" cx="60" cy="60" r="54"/>
+            </svg>
+            <div class="timer-num" role="timer" aria-live="off"><b id="timer-num">30</b><small>SECONDS</small></div>
+          </div>
+          <div class="answer-zone">
+            <div class="answer-label" id="answer-label"></div>
+            <div class="answer-card covered" id="answer-card"><div id="answer-body"></div></div>
+            <div class="progress">
+              <div class="dots" id="dots"></div>
+              <div class="count"><b id="count">0</b>/10</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ready">
+          <button type="button" id="btn-start" class="btn btn-gold btn-xl">▶ Start Turn</button>
+          <button type="button" id="btn-back" class="linkbtn">← Choose a different category</button>
+        </div>
+
+        <div class="controls">
+          <button type="button" id="btn-skip" class="btn btn-skip">» Skip</button>
+          <button type="button" id="btn-correct" class="btn btn-correct">✓ Correct</button>
+          <button type="button" id="btn-end" class="btn btn-end">■ End Turn</button>
+        </div>
+        <p class="keys">Keyboard: Space = Correct · Arrow keys = Skip</p>
+      </div>
+    </section>
+
+    <!-- ===================== FINAL ===================== -->
+    <section id="scr-final" class="screen">
+      <div class="results" id="final-results"></div>
+    </section>
+  </main>
+</div>
+
+<!-- Category summary modal -->
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="sum-title">
+  <div class="modal-card" id="modal-card"></div>
+</div>
+
+<div class="stamp" id="stamp"><span></span></div>
+<div class="toast" id="toast"></div>
+<canvas id="confetti"></canvas>
+
+<!-- =========================================================
+     QUESTION DATABASE
+     ---------------------------------------------------------
+     To add a category, append an object to the array below:
+       { id: <unique number>, name: "...", difficulty: "easy"|"medium"|"hard",
+         answers: [ at least 10 strings ] }
+     If a category has more than 10 answers, 10 are picked at random each game.
+     ========================================================= -->
+<script>
+window.CATEGORY_DB = [
+  { id: 1,  name: "Things You Find at the Beach", difficulty: "easy",   answers: ["Sunscreen","Sandcastle","Seashell","Beach Ball","Umbrella","Lifeguard","Surfboard","Towel","Flip-Flops","Seagull"] },
+  { id: 2,  name: "Things in a Kitchen",           difficulty: "easy",   answers: ["Refrigerator","Toaster","Spatula","Blender","Microwave","Oven Mitt","Cutting Board","Dishwasher","Frying Pan","Kettle"] },
+  { id: 3,  name: "Farm Animals",                  difficulty: "easy",   answers: ["Cow","Pig","Chicken","Goat","Sheep","Horse","Duck","Turkey","Donkey","Rooster"] },
+  { id: 4,  name: "Breakfast Foods",               difficulty: "easy",   answers: ["Pancakes","Waffles","Bacon","Omelet","Cereal","French Toast","Bagel","Oatmeal","Hash Browns","Yogurt"] },
+  { id: 5,  name: "Things With Wheels",            difficulty: "easy",   answers: ["Bicycle","Skateboard","Shopping Cart","Wheelbarrow","Stroller","Bus","Roller Skates","Car","Train","Wagon"] },
+  { id: 6,  name: "Things That Are Cold",          difficulty: "easy",   answers: ["Ice Cube","Snowman","Igloo","Freezer","Popsicle","Glacier","Antarctica","Snowball","Iceberg","North Pole"] },
+  { id: 7,  name: "Jobs in a Hospital",            difficulty: "medium", answers: ["Doctor","Nurse","Surgeon","Pharmacist","Paramedic","Receptionist","Janitor","Radiologist","Pediatrician","Security Guard"] },
+  { id: 8,  name: "Things at a Birthday Party",    difficulty: "easy",   answers: ["Cake","Candles","Balloons","Presents","Party Hat","Piñata","Wrapping Paper","Streamers","Goody Bag","Birthday Song"] },
+  { id: 9,  name: "Sports Played With a Ball",     difficulty: "easy",   answers: ["Soccer","Basketball","Tennis","Baseball","Golf","Volleyball","Bowling","Rugby","Football","Cricket"] },
+  { id: 10, name: "Things in a Bathroom",          difficulty: "easy",   answers: ["Toothbrush","Shower","Towel","Mirror","Bathtub","Soap","Toilet Paper","Sink","Toilet","Shampoo"] },
+  { id: 11, name: "Musical Instruments",           difficulty: "easy",   answers: ["Piano","Guitar","Drums","Violin","Trumpet","Flute","Harmonica","Saxophone","Cello","Tuba"] },
+  { id: 12, name: "Things That Fly",               difficulty: "easy",   answers: ["Airplane","Helicopter","Kite","Butterfly","Rocket","Hot Air Balloon","Eagle","Bat","Drone","Paper Airplane"] },
+  { id: 13, name: "Things in a Classroom",         difficulty: "easy",   answers: ["Chalkboard","Desk","Backpack","Pencil Sharpener","Globe","Textbook","Teacher","Eraser","Ruler","Whiteboard"] },
+  { id: 14, name: "Pizza Toppings",                difficulty: "easy",   answers: ["Pepperoni","Mushrooms","Olives","Pineapple","Sausage","Onions","Extra Cheese","Bell Peppers","Ham","Anchovies"] },
+  { id: 15, name: "Things That Are Red",           difficulty: "easy",   answers: ["Fire Truck","Strawberry","Stop Sign","Tomato","Ladybug","Rose","Lipstick","Cherry","Apple","Fire Hydrant"] },
+  { id: 16, name: "Camping Gear",                  difficulty: "medium", answers: ["Tent","Sleeping Bag","Flashlight","Campfire","Marshmallows","Compass","Bug Spray","Lantern","Canoe","Hiking Boots"] },
+  { id: 17, name: "Things in the Sky",             difficulty: "easy",   answers: ["Cloud","Rainbow","Moon","Star","Sun","Lightning","Comet","Bird","Kite","Sunset"] },
+  { id: 18, name: "Zoo Animals",                   difficulty: "easy",   answers: ["Elephant","Giraffe","Lion","Zebra","Monkey","Penguin","Hippo","Gorilla","Kangaroo","Polar Bear"] },
+  { id: 19, name: "Things You Wear in Winter",     difficulty: "easy",   answers: ["Mittens","Scarf","Boots","Earmuffs","Parka","Beanie","Wool Socks","Gloves","Snow Pants","Sweater"] },
+  { id: 20, name: "Things in an Office",           difficulty: "medium", answers: ["Stapler","Printer","Paper Clip","Calendar","Swivel Chair","Water Cooler","Computer","Desk Lamp","Whiteboard","Sticky Notes"] },
+  { id: 21, name: "Things That Are Sticky",        difficulty: "medium", answers: ["Glue","Honey","Tape","Gum","Syrup","Cotton Candy","Spider Web","Jam","Slime","Caramel"] },
+  { id: 22, name: "Superpowers",                   difficulty: "medium", answers: ["Flying","Invisibility","Super Strength","Mind Reading","Time Travel","Teleportation","X-Ray Vision","Shape-Shifting","Super Speed","Healing"] },
+  { id: 23, name: "Things That Make Noise",        difficulty: "easy",   answers: ["Alarm Clock","Doorbell","Siren","Whistle","Thunder","Rooster","Vacuum Cleaner","Car Horn","Drum","Dog Barking"] },
+  { id: 24, name: "Things at the Movies",          difficulty: "easy",   answers: ["Popcorn","Tickets","Big Screen","3D Glasses","Previews","Usher","Soda","Candy","Nachos","Movie Star"] },
+  { id: 25, name: "Things in a Wallet",            difficulty: "medium", answers: ["Cash","Credit Card","Driver's License","Receipt","Coins","Photo","Gift Card","ID Card","Library Card","Business Card"] },
+  { id: 26, name: "Things at an Airport",          difficulty: "medium", answers: ["Passport","Suitcase","Security Line","Boarding Pass","Pilot","Runway","Baggage Claim","Flight Attendant","Departure Gate","Jet Lag"] },
+  { id: 27, name: "Desserts",                      difficulty: "easy",   answers: ["Brownie","Cheesecake","Apple Pie","Cupcake","Ice Cream Sundae","Cookie","Pudding","Tiramisu","Donut","Cobbler"] },
+  { id: 28, name: "Things That Are Round",         difficulty: "easy",   answers: ["Ball","Wheel","Coin","Pizza","Donut","Clock","Globe","Plate","Orange","Button"] },
+  { id: 29, name: "Things at a Wedding",           difficulty: "medium", answers: ["Bride","Ring","Bouquet","Veil","Wedding Cake","First Dance","Toast","Groom","Best Man","Flower Girl"] },
+  { id: 30, name: "Bugs and Insects",              difficulty: "easy",   answers: ["Ant","Bee","Mosquito","Ladybug","Grasshopper","Firefly","Caterpillar","Beetle","Cricket","Dragonfly"] },
+  { id: 31, name: "Things in a Garden",            difficulty: "easy",   answers: ["Flowers","Hose","Watering Can","Seeds","Earthworm","Garden Gnome","Rake","Tomato Plant","Bird Bath","Butterfly"] },
+  { id: 32, name: "Ocean Creatures",               difficulty: "easy",   answers: ["Shark","Whale","Octopus","Dolphin","Jellyfish","Starfish","Sea Turtle","Seahorse","Crab","Stingray"] },
+  { id: 33, name: "Fruits",                        difficulty: "easy",   answers: ["Banana","Apple","Watermelon","Grapes","Mango","Pineapple","Cherry","Strawberry","Peach","Kiwi"] },
+  { id: 34, name: "Vegetables",                    difficulty: "easy",   answers: ["Carrot","Broccoli","Potato","Corn","Lettuce","Cucumber","Spinach","Peas","Tomato","Onion"] },
+  { id: 35, name: "Things You Do in the Morning",  difficulty: "medium", answers: ["Brush Your Teeth","Take a Shower","Make Coffee","Get Dressed","Eat Breakfast","Hit Snooze","Make the Bed","Check Your Phone","Comb Your Hair","Read the News"] },
+  { id: 36, name: "Things That Have Keys",         difficulty: "hard",   answers: ["Piano","Computer Keyboard","Car","Map","House","Treasure Chest","Diary","Typewriter","Hotel Room","Answer Key"] },
+  { id: 37, name: "Things You Recycle",            difficulty: "medium", answers: ["Newspaper","Plastic Bottle","Soda Can","Cardboard Box","Glass Jar","Magazine","Milk Jug","Aluminum Foil","Cereal Box","Juice Carton"] },
+  { id: 38, name: "Things in a Toolbox",           difficulty: "medium", answers: ["Hammer","Screwdriver","Wrench","Pliers","Tape Measure","Nails","Level","Saw","Drill","Duct Tape"] },
+  { id: 39, name: "Holidays",                      difficulty: "easy",   answers: ["Christmas","Halloween","Thanksgiving","New Year's Eve","Valentine's Day","Easter","Diwali","Hanukkah","Fourth of July","Mother's Day"] },
+  { id: 40, name: "Things at a Carnival",          difficulty: "easy",   answers: ["Ferris Wheel","Cotton Candy","Roller Coaster","Clown","Bumper Cars","Funnel Cake","Ring Toss","Prizes","Caramel Apple","Fun House"] },
+  { id: 41, name: "Types of Weather",              difficulty: "easy",   answers: ["Rain","Snow","Hurricane","Tornado","Fog","Hail","Sunshine","Thunderstorm","Wind","Sleet"] },
+  { id: 42, name: "Things That Are Hot",           difficulty: "easy",   answers: ["Sun","Fire","Lava","Stove","Desert","Hot Sauce","Coffee","Oven","Chili Pepper","Sauna"] },
+  { id: 43, name: "Things in a Bedroom",           difficulty: "easy",   answers: ["Bed","Pillow","Closet","Alarm Clock","Dresser","Lamp","Blanket","Nightstand","Rug","Curtains"] },
+  { id: 44, name: "Things You Can Fold",           difficulty: "hard",   answers: ["Paper","Laundry","Napkin","Map","Lawn Chair","Origami","Your Arms","Towel","Letter","Poker Hand"] },
+  { id: 45, name: "Fairy Tale Things",             difficulty: "medium", answers: ["Castle","Dragon","Princess","Magic Wand","Witch","Unicorn","Knight","Giant","Fairy Godmother","Enchanted Forest"] },
+  { id: 46, name: "Things With Stripes",           difficulty: "medium", answers: ["Zebra","Tiger","Candy Cane","Barber Pole","Bee","Flag","Crosswalk","Referee Shirt","Skunk","Barcode"] },
+  { id: 47, name: "Things in a Hotel",             difficulty: "medium", answers: ["Room Key","Front Desk","Room Service","Elevator","Mini Bar","Pool","Bellhop","Lobby","Housekeeping","Do Not Disturb Sign"] },
+  { id: 48, name: "Things You Pack for Vacation",  difficulty: "easy",   answers: ["Swimsuit","Toothbrush","Sunglasses","Phone Charger","Passport","Camera","Flip-Flops","Sunscreen","Book","Hat"] },
+  { id: 49, name: "Things in a Car",               difficulty: "medium", answers: ["Steering Wheel","Seat Belt","Glove Box","Radio","Rearview Mirror","Horn","Windshield Wipers","Gas Pedal","Headlights","Spare Tire"] },
+  { id: 50, name: "Ways to Say Hello",             difficulty: "hard",   answers: ["Hi","Hey","Howdy","Hola","Bonjour","What's Up","Good Morning","Yo","Greetings","Aloha"] },
+  { id: 51, name: "Things That Are Soft",          difficulty: "easy",   answers: ["Pillow","Kitten","Cotton Ball","Teddy Bear","Marshmallow","Feather","Blanket","Puppy","Cloud","Slippers"] },
+  { id: 52, name: "Things at the Grocery Store",   difficulty: "medium", answers: ["Cashier","Shopping Cart","Coupon","Produce","Checkout Lane","Deli Counter","Frozen Aisle","Bakery","Receipt","Cereal Aisle"] },
+  { id: 53, name: "Things That Bounce",            difficulty: "medium", answers: ["Basketball","Trampoline","Kangaroo","Rubber Ball","Pogo Stick","Bungee Jumper","Bouncy Castle","Bunny","Ping-Pong Ball","Tennis Ball"] },
+  { id: 54, name: "Things in Outer Space",         difficulty: "medium", answers: ["Planet","Astronaut","Asteroid","Black Hole","Satellite","Galaxy","Space Station","Moon","Sun","Meteor"] },
+  { id: 55, name: "Game Night Things",             difficulty: "medium", answers: ["Dice","Deck of Cards","Checkers","Chess","Game Board","Spinner","Hourglass","Score Pad","Tokens","Snacks"] },
+  { id: 56, name: "Things You Do at the Gym",      difficulty: "easy",   answers: ["Push-Ups","Treadmill","Lift Weights","Yoga","Jumping Jacks","Stretch","Sit-Ups","Squats","Lunges","Rowing Machine"] },
+  { id: 57, name: "Things That Are Yellow",        difficulty: "easy",   answers: ["Banana","School Bus","Lemon","Sunflower","Rubber Duck","Taxi","Corn","Pencil","Cheese","Canary"] },
+  { id: 58, name: "Things at a Restaurant",        difficulty: "easy",   answers: ["Menu","Waiter","Tip","Chef","Reservation","Napkin","The Check","Booth","Daily Specials","Host"] },
+  { id: 59, name: "Pets",                          difficulty: "easy",   answers: ["Dog","Cat","Goldfish","Hamster","Parrot","Rabbit","Turtle","Guinea Pig","Lizard","Snake"] },
+  { id: 60, name: "Things That Are Fast",          difficulty: "easy",   answers: ["Cheetah","Race Car","Rocket","Lightning","Jet","Speedboat","Roller Coaster","Bullet","Falcon","Sprinter"] },
+  { id: 61, name: "Things in a Park",              difficulty: "easy",   answers: ["Swing","Slide","Bench","Fountain","Picnic Table","Squirrel","Jogger","Seesaw","Duck Pond","Frisbee"] },
+  { id: 62, name: "Types of Dances",               difficulty: "medium", answers: ["Salsa","Tango","Ballet","Waltz","Hip-Hop","Tap Dance","Conga Line","Line Dance","Breakdance","Cha-Cha"] },
+  { id: 63, name: "Things You Do on a Phone",      difficulty: "easy",   answers: ["Send a Text","Make a Call","Take a Selfie","Play Games","Check Email","Scroll","Set an Alarm","Video Chat","Take a Photo","Check the Weather"] },
+  { id: 64, name: "Famous Landmarks",              difficulty: "medium", answers: ["Eiffel Tower","Statue of Liberty","Great Wall of China","Pyramids of Giza","Big Ben","Taj Mahal","Grand Canyon","Colosseum","Golden Gate Bridge","Mount Rushmore"] },
+  { id: 65, name: "Things That Melt",              difficulty: "medium", answers: ["Ice","Snowman","Chocolate","Candle","Butter","Cheese","Ice Cream","Crayon","Snow","Popsicle"] },
+  { id: 66, name: "Things With Wings",             difficulty: "easy",   answers: ["Bird","Bat","Airplane","Butterfly","Angel","Dragon","Dragonfly","Fairy","Chicken","Ladybug"] },
+  { id: 67, name: "Things in a Library",           difficulty: "medium", answers: ["Books","Librarian","Library Card","Bookshelf","Quiet Sign","Reading Table","Encyclopedia","Late Fee","Dictionary","Story Time"] },
+  { id: 68, name: "Things a Baby Uses",            difficulty: "easy",   answers: ["Diaper","Bottle","Pacifier","Crib","Rattle","Bib","Stroller","Baby Wipes","High Chair","Onesie"] },
+  { id: 69, name: "Things You Say When Surprised", difficulty: "hard",   answers: ["Wow","Oh My Gosh","No Way","Whoa","Really?","Holy Cow","You're Kidding","Yikes","Oh No","Get Out"] },
+  { id: 70, name: "Kinds of Shoes",                difficulty: "easy",   answers: ["Sneakers","Sandals","High Heels","Boots","Slippers","Flip-Flops","Loafers","Clogs","Cleats","Ballet Flats"] },
+  { id: 71, name: "Things at a Fire Station",      difficulty: "medium", answers: ["Fire Truck","Hose","Helmet","Ladder","Dalmatian","Fire Pole","Siren","Firefighter","Axe","Fire Extinguisher"] },
+  { id: 72, name: "Things That Can Be Broken",     difficulty: "hard",   answers: ["Promise","World Record","Heart","Silence","The Law","Habit","Window","Bone","Mirror","Piggy Bank"] },
+  { id: 73, name: "Things Fit for Royalty",        difficulty: "medium", answers: ["Crown","Throne","Castle","Scepter","Knight","Queen","Royal Wedding","Jewels","King","Palace"] },
+  { id: 74, name: "Things You Shake",              difficulty: "hard",   answers: ["Hands","Salt Shaker","Maracas","Snow Globe","Dice","Tambourine","Pom-Poms","Milkshake","Ketchup Bottle","Rattle"] },
+  { id: 75, name: "Things With a Shell",           difficulty: "medium", answers: ["Turtle","Snail","Egg","Crab","Peanut","Clam","Coconut","Oyster","Lobster","Armadillo"] },
+  { id: 76, name: "Things at a Sleepover",         difficulty: "easy",   answers: ["Sleeping Bag","Pajamas","Pillow Fight","Ghost Stories","Movie","Popcorn","Flashlight","Snacks","Truth or Dare","Air Mattress"] },
+  { id: 77, name: "Things in a Backyard",          difficulty: "easy",   answers: ["Grill","Fence","Swing Set","Lawn Mower","Doghouse","Sprinkler","Hammock","Garden","Patio","Treehouse"] },
+  { id: 78, name: "Things You Plug In",            difficulty: "medium", answers: ["Lamp","Toaster","Phone Charger","Hair Dryer","Television","Christmas Lights","Vacuum","Refrigerator","Computer","Blender"] },
+  { id: 79, name: "Things That Are Green",         difficulty: "easy",   answers: ["Grass","Frog","Lime","Broccoli","Shamrock","Pickle","Money","Leaf","Cucumber","Lettuce"] },
+  { id: 80, name: "Things With Buttons",           difficulty: "medium", answers: ["Shirt","Remote Control","Elevator","Calculator","Doorbell","Video Game Controller","Microwave","Keyboard","Coat","Phone"] }
+];
+</script>
+
+<!-- =========================================================
+     GAME LOGIC
+     ========================================================= -->
+<script>
+(() => {
+'use strict';
+
+/* ---------- constants & helpers ---------- */
+const PER_ROUND = 6;
+const ANSWERS = 10;
+const RING_C = 2 * Math.PI * 54;
+const LS = { setup: 'cluePyramid.setup.v1', save: 'cluePyramid.save.v1', recent: 'cluePyramid.recent.v1' };
+
+const DB = (window.CATEGORY_DB || []).filter((c, i, arr) => {
+  const ok = c && c.id != null && c.name && Array.isArray(c.answers) && c.answers.length >= ANSWERS &&
+             arr.findIndex(o => o.id === c.id) === i;
+  if (!ok) console.warn('Clue Pyramid: skipping invalid/duplicate category', c);
+  return ok;
+});
+
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const store = {
+  get(k) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+  del(k) { try { localStorage.removeItem(k); } catch (e) {} }
+};
+
+let S = null;          // game state (persisted)
+let T = null;          // active turn (not persisted)
+let soundOn = true;
+let busy = false;
+
+/* ---------- sound (WebAudio, no files needed) ---------- */
+let actx = null;
+function audio() {
+  if (!soundOn) return null;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+    return actx;
+  } catch (e) { return null; }
+}
+function tone(freq, dur, type = 'sine', vol = 0.2, when = 0, slideTo) {
+  const a = audio(); if (!a) return;
+  const t = a.currentTime + when;
+  const o = a.createOscillator(), g = a.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t);
+  if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(vol, t + 0.015);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(a.destination);
+  o.start(t); o.stop(t + dur + 0.05);
+}
+const sfx = {
+  select()  { tone(700, .09, 'sine', .15); tone(1050, .12, 'sine', .12, .07); },
+  start()   { tone(523, .12, 'triangle', .2); tone(784, .12, 'triangle', .2, .1); tone(1047, .25, 'triangle', .22, .2); },
+  correct() { tone(880, .1, 'triangle', .22); tone(1320, .2, 'triangle', .2, .08); },
+  skip()    { tone(330, .18, 'square', .06, 0, 200); },
+  tick()    { tone(1400, .05, 'square', .05); },
+  buzzer()  { tone(130, 1.0, 'sawtooth', .22); tone(138, 1.0, 'sawtooth', .18); },
+  fanfare() { [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, i === 5 ? .6 : .2, 'triangle', .2, i * .13)); }
+};
+
+/* ---------- confetti ---------- */
+const confetti = (() => {
+  const cv = $('#confetti'), ctx = cv.getContext('2d');
+  let parts = [], raf = null, W = 0, H = 0;
+  function resize() { const d = window.devicePixelRatio || 1; W = innerWidth; H = innerHeight; cv.width = W * d; cv.height = H * d; ctx.setTransform(d, 0, 0, d, 0, 0); }
+  addEventListener('resize', resize); resize();
+  function burst(colors, n = 180) {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) n = Math.round(n / 4);
+    for (let i = 0; i < n; i++) parts.push({
+      x: Math.random() * W, y: -20 - Math.random() * H * .6,
+      vx: (Math.random() - .5) * 3, vy: 2 + Math.random() * 3.5,
+      w: 7 + Math.random() * 7, h: 4 + Math.random() * 6,
+      r: Math.random() * 6, vr: (Math.random() - .5) * .25,
+      c: colors[Math.floor(Math.random() * colors.length)], s: Math.random() * 10
+    });
+    if (!raf) loop();
+  }
+  function loop() {
+    ctx.clearRect(0, 0, W, H);
+    for (const p of parts) {
+      p.s += .05; p.x += p.vx + Math.sin(p.s) * .8; p.y += p.vy; p.vy = Math.min(p.vy + .02, 6); p.r += p.vr;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * Math.abs(Math.cos(p.s))); ctx.restore();
+    }
+    parts = parts.filter(p => p.y < H + 30);
+    if (parts.length) raf = requestAnimationFrame(loop); else { raf = null; ctx.clearRect(0, 0, W, H); }
+  }
+  function stop() { parts = []; }
+  return { burst, stop };
+})();
+
+/* ---------- UI helpers ---------- */
+function showScreen(name) {
+  $$('.screen').forEach(s => s.classList.toggle('active', s.id === 'scr-' + name));
+  $('#scorebar').hidden = !(name === 'board' || name === 'play');
+  document.body.classList.remove('danger');
+  window.scrollTo(0, 0);
+}
+let toastTimer;
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+function stamp(text, kind) {
+  const s = $('#stamp'); s.className = 'stamp ' + kind; s.querySelector('span').textContent = text;
+  void s.offsetWidth; s.classList.add('show');
+}
+function updateSoundBtn() { $('#btn-sound').textContent = soundOn ? '🔊' : '🔇'; }
+
+/* ---------- state helpers ---------- */
+const teamName = i => S.config.teams[i].name;
+const playedCount = () => S.board.filter(t => t.played).length;
+const currentTeam = () => playedCount() % 2;
+function save() { if (S && S.phase !== 'final') store.set(LS.save, S); }
+
+function pickCategories(n) {
+  const recentArr = store.get(LS.recent) || [];
+  const recent = new Set(recentArr);
+  const avail = DB.filter(c => !S.usedIds.includes(c.id));
+  let picked = shuffle(avail.filter(c => !recent.has(c.id))).concat(shuffle(avail.filter(c => recent.has(c.id)))).slice(0, n);
+  if (picked.length < n) picked = picked.concat(shuffle(DB.filter(c => !picked.includes(c))).slice(0, n - picked.length));
+  picked.forEach(c => S.usedIds.push(c.id));
+  const ids = picked.map(c => c.id);
+  const cap = Math.max(0, DB.length - 2 * PER_ROUND);
+  store.set(LS.recent, recentArr.filter(id => !ids.includes(id)).concat(ids).slice(-cap));
+  return picked.map(c => ({
+    id: c.id, name: c.name, difficulty: c.difficulty || '',
+    answers: shuffle(c.answers).slice(0, ANSWERS),
+    played: false, team: null, points: 0, skipped: 0
+  }));
+}
+
+/* =========================================================
+   SETUP
+   ========================================================= */
+function initSetup() {
+  const saved = store.get(LS.setup);
+  if (saved && Array.isArray(saved.teams)) {
+    saved.teams.forEach((t, i) => { $(`#t${i}-name`).value = t.name || ''; });
+    $('#cfg-dur').value = saved.duration || 30;
+    soundOn = saved.sound !== false;
+  }
+  const g = store.get(LS.save);
+  $('#btn-resume').hidden = !(g && g.phase && g.phase !== 'final');
+}
+
+$$('.stepper button').forEach(b => b.addEventListener('click', () => {
+  const inp = $('#' + b.dataset.target);
+  inp.value = clamp((+inp.value || 0) + (+b.dataset.step), +inp.min, +inp.max);
+}));
+
+$('#setup-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const val = id => { const el = $('#' + id); return el.value.trim() || el.placeholder; };
+  const config = {
+    teams: [0, 1].map(i => ({ name: val(`t${i}-name`) })),
+    duration: clamp(Math.round(+$('#cfg-dur').value || 30), 10, 180),
+    sound: soundOn
+  };
+  if (config.teams[0].name.toLowerCase() === config.teams[1].name.toLowerCase()) {
+    config.teams[0].name += ' (1)'; config.teams[1].name += ' (2)';
+  }
+  store.set(LS.setup, { teams: config.teams, duration: config.duration, sound: config.sound });
+  updateSoundBtn();
+  audio();   // unlock audio on user gesture
+  startGame(config);
+});
+
+$('#btn-resume').addEventListener('click', () => {
+  const g = store.get(LS.save);
+  if (!g) { $('#btn-resume').hidden = true; return; }
+  S = g; T = null; soundOn = S.config.sound !== false; updateSoundBtn();
+  if (playedCount() >= PER_ROUND) finishGame(); else showBoard();
+});
+
+function startGame(config) {
+  confetti.stop();
+  S = { config, scores: [0, 0], board: [], usedIds: [], phase: 'board' };
+  T = null;
+  $$('.ts-score').forEach(el => { el.dataset.v = 0; el.textContent = 0; });
+  S.board = pickCategories(PER_ROUND);
+  S.phase = 'board';
+  save();
+  showBoard();
+}
+
+/* =========================================================
+   SCOREBAR
+   ========================================================= */
+function animateScore(i) {
+  const el = $(`#sb-${i} .ts-score`);
+  const from = +el.dataset.v || 0, to = S.scores[i];
+  el.dataset.v = to;
+  if (from === to) { el.textContent = to; return; }
+  const t0 = performance.now(), dur = 450;
+  (function step(now) {
+    const k = Math.min(1, (now - t0) / dur);
+    el.textContent = Math.round(from + (to - from) * k);
+    if (k < 1) requestAnimationFrame(step);
+  })(t0);
+  el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+}
+function renderScorebar() {
+  const active = T && !T.over ? T.team : currentTeam();
+  [0, 1].forEach(i => {
+    const card = $('#sb-' + i);
+    card.querySelector('.ts-name').textContent = teamName(i);
+    card.classList.toggle('active', S.phase === 'board' && i === active);
+    animateScore(i);
+  });
+  const n = T && !T.over ? playedCount() + 1 : Math.min(playedCount() + 1, PER_ROUND);
+  $('#sb-cat').textContent = `Category ${n} of ${PER_ROUND}`;
+}
+function floater(team) {
+  const card = $('#sb-' + team), f = document.createElement('div');
+  f.className = 'floater'; f.textContent = '+1';
+  const sc = card.querySelector('.ts-score');
+  f.style.left = (sc.offsetLeft + sc.offsetWidth / 2 - 14) + 'px'; f.style.top = (sc.offsetTop - 6) + 'px';
+  card.appendChild(f); setTimeout(() => f.remove(), 1000);
+}
+
+/* =========================================================
+   BOARD
+   ========================================================= */
+function showBoard() {
+  S.phase = 'board'; T = null; busy = false;
+  const team = currentTeam();
+  $('#upnext').innerHTML = `
+    <div class="un-team t${team + 1}">${esc(teamName(team))}</div>
+    <div class="un-label">Pick a category</div>`;
+  const rows = [[0], [1, 2], [3, 4, 5]];
+  const pyr = $('#pyramid'); pyr.classList.remove('choosing');
+  pyr.innerHTML = rows.map(row => `<div class="prow">${row.map(i => {
+    const t = S.board[i];
+    const done = t.played
+      ? `<span class="tile-done">✓ ${esc(teamName(t.team))} · ${t.points} pt${t.points === 1 ? '' : 's'}</span>`
+      : '';
+    return `<button type="button" class="tile ${t.played ? 'played t' + (t.team + 1) : ''}" data-i="${i}" style="--d:${i}"
+      ${t.played ? 'disabled aria-disabled="true"' : ''} aria-label="${esc(t.name)}${t.played ? ' (played)' : ''}">
+      <span class="tile-name">${esc(t.name)}</span>${done}</button>`;
+  }).join('')}</div>`).join('');
+  renderScorebar();
+  showScreen('board');
+}
+$('#pyramid').addEventListener('click', e => {
+  const tile = e.target.closest('.tile');
+  if (!tile || busy || tile.disabled) return;
+  const i = +tile.dataset.i;
+  if (S.board[i].played) return;
+  busy = true; sfx.select();
+  tile.classList.add('picked'); $('#pyramid').classList.add('choosing');
+  setTimeout(() => { busy = false; prepareTurn(i); }, 750);
+});
+
+/* =========================================================
+   TURN
+   ========================================================= */
+function prepareTurn(i) {
+  const team = currentTeam(), tile = S.board[i];
+  T = {
+    i, team,
+    items: tile.answers.map(text => ({ text, status: 'pending' })),
+    mainIdx: 0, queue: [], cur: 0, mode: 'main',
+    total: S.config.duration * 1000, remaining: S.config.duration * 1000,
+    endAt: 0, timer: null, started: false, paused: false, over: false, lastSec: null
+  };
+  $('#ph-team').className = 'ph-team t' + (team + 1);
+  $('#ph-team').innerHTML = `<span>${esc(teamName(team))}</span>`;
+  $('#ph-cat').textContent = tile.name;
+  const play = $('#play'); play.classList.add('is-ready'); play.classList.remove('over');
+  $('#btn-end').classList.remove('armed'); $('#btn-end').innerHTML = '■ End Turn';
+  const card = $('#answer-card'); card.className = 'answer-card covered';
+  $('#answer-body').innerHTML = `<div class="cover-msg">
+      <div class="big">Guesser, turn away from the screen!</div>
+      <div class="sm">${S.config.duration} seconds · ${ANSWERS} answers</div></div>`;
+  $('#answer-label').innerHTML = '';
+  renderTimer(); renderProgress();
+  renderScorebar();
+  showScreen('play');
+}
+
+function startTurn() {
+  if (!T || T.started || T.over) return;
+  T.started = true;
+  $('#play').classList.remove('is-ready');
+  sfx.start();
+  renderAnswer();
+  renderProgress();
+  startClock();
+}
+
+/* ----- clock ----- */
+function startClock() {
+  T.endAt = Date.now() + T.remaining;
+  clearInterval(T.timer);
+  T.timer = setInterval(tickClock, 100);
+  tickClock();
+}
+function stopClock() { if (T) clearInterval(T.timer); }
+function tickClock() {
+  if (!T || T.over || T.paused) return;
+  T.remaining = Math.max(0, T.endAt - Date.now());
+  renderTimer();
+  const sec = Math.ceil(T.remaining / 1000);
+  if (sec !== T.lastSec) { T.lastSec = sec; if (sec > 0 && sec <= 5) sfx.tick(); }
+  if (T.remaining <= 0) endTurn('time');
+}
+function renderTimer() {
+  const sec = Math.ceil(T.remaining / 1000);
+  $('#timer-num').textContent = sec;
+  $('#timer-ring').style.strokeDasharray = RING_C;
+  $('#timer-ring').style.strokeDashoffset = RING_C * (1 - T.remaining / T.total);
+  const warn = T.started && !T.over && T.remaining > 0 && sec <= 10;
+  $('#timer').classList.toggle('warn', warn);
+  $('#timer').classList.toggle('paused', T.paused);
+  document.body.classList.toggle('danger', warn && !T.paused);
+}
+
+/* ----- answers ----- */
+function renderAnswer() {
+  const card = $('#answer-card');
+  card.classList.remove('covered');
+  card.classList.toggle('revisit', T.mode === 'revisit');
+  if (T.mode === 'main') {
+    $('#answer-label').innerHTML = '';
+  } else {
+    const left = T.queue.length + 1;
+    $('#answer-label').innerHTML = `<span class="rev">↺ Revisiting skipped</span><span class="rev">${left} left</span>`;
+  }
+  $('#btn-skip').textContent = T.mode === 'revisit' ? '» Skip Again' : '» Skip';
+  $('#answer-body').innerHTML = `<div class="answer-text in">${esc(T.items[T.cur].text)}</div>`;
+}
+function renderProgress() {
+  $('#dots').innerHTML = T.items.map((it, idx) => {
+    const cur = T.started && !T.over && idx === T.cur;
+    const sym = it.status === 'correct' ? '✓' : it.status === 'skipped' ? '»' : (idx + 1);
+    return `<div class="dot ${it.status} ${cur ? 'current' : ''}" title="${it.status}">${sym}</div>`;
+  }).join('');
+  $('#count').textContent = T.items.filter(it => it.status === 'correct').length;
+}
+const canAct = () => T && T.started && !T.over && !T.paused;
+
+function markCorrect() {
+  if (!canAct()) return;
+  const it = T.items[T.cur];
+  it.status = 'correct';
+  S.board[T.i].points++;
+  S.scores[T.team]++;
+  sfx.correct();
+  const card = $('#answer-card'); card.classList.remove('good'); void card.offsetWidth; card.classList.add('good');
+  renderScorebar(); floater(T.team);
+  advance();
+}
+function markSkip() {
+  if (!canAct()) return;
+  T.items[T.cur].status = 'skipped';
+  T.queue.push(T.cur);
+  sfx.skip();
+  const card = $('#answer-card'); card.classList.remove('skipfx'); void card.offsetWidth; card.classList.add('skipfx');
+  if (T.mode === 'main') { advance(); return; }
+  const prev = T.cur;
+  T.cur = T.queue.shift();
+  if (T.cur === prev) toast('Only one answer left — keep trying!');
+  renderAnswer(); renderProgress();
+}
+function advance() {
+  if (T.mode === 'main') {
+    T.mainIdx++;
+    if (T.mainIdx < ANSWERS) { T.cur = T.mainIdx; }
+    else if (T.queue.length) { T.mode = 'revisit'; T.cur = T.queue.shift(); toast('Back to the skipped answers!'); }
+    else { renderProgress(); endTurn('perfect'); return; }
+  } else {
+    if (T.queue.length) T.cur = T.queue.shift();
+    else { renderProgress(); endTurn('perfect'); return; }
+  }
+  renderAnswer(); renderProgress();
+}
+
+function endTurn(reason) {
+  if (!T || T.over) return;
+  T.over = true; T.paused = false;
+  stopClock();
+  if (reason === 'time') T.remaining = 0;
+  renderTimer();
+  document.body.classList.remove('danger');
+  $('#play').classList.add('over');
+  const tile = S.board[T.i];
+  tile.played = true; tile.team = T.team;
+  tile.skipped = T.items.filter(it => it.status === 'skipped').length;
+  save();
+  renderProgress();
+  if (reason === 'time') { sfx.buzzer(); stamp("Time's up!", 'time'); setTimeout(() => showSummary(reason), 1500); }
+  else if (reason === 'perfect') { sfx.fanfare(); stamp('Perfect 10!', 'perfect'); confetti.burst(['#ffc83d', '#fff', T.team ? '#ff3d8b' : '#22c3ff'], 120); setTimeout(() => showSummary(reason), 1500); }
+  else setTimeout(() => showSummary(reason), 150);
+}
+
+/* End turn requires a double tap to avoid accidents */
+let armTimer;
+$('#btn-end').addEventListener('click', () => {
+  if (!T || !T.started || T.over) return;
+  const b = $('#btn-end');
+  if (b.classList.contains('armed')) { clearTimeout(armTimer); b.classList.remove('armed'); endTurn('manual'); return; }
+  b.classList.add('armed'); b.textContent = 'Tap again to end';
+  armTimer = setTimeout(() => { b.classList.remove('armed'); b.innerHTML = '■ End Turn'; }, 2500);
+});
+$('#btn-start').addEventListener('click', startTurn);
+$('#btn-correct').addEventListener('click', markCorrect);
+$('#btn-skip').addEventListener('click', markSkip);
+$('#btn-back').addEventListener('click', () => { if (T && !T.started) { T = null; showBoard(); } });
+
+/* =========================================================
+   CATEGORY SUMMARY
+   ========================================================= */
+let modalOpenedAt = 0;
+function showSummary(reason) {
+  const tile = S.board[T.i];
+  const correct = T.items.filter(it => it.status === 'correct').length;
+  const skipped = T.items.filter(it => it.status === 'skipped').length;
+  const titles = { time: "Time's Up!", perfect: 'Perfect Pyramid!', manual: 'Turn Over' };
+  const last = playedCount() >= PER_ROUND;
+  let nextLine = '';
+  if (!last) nextLine = `<div class="next-up">Next up: <b>${esc(teamName(currentTeam()))}</b></div>`;
+  const card = $('#modal-card');
+  card.className = 'modal-card t' + (T.team + 1);
+  card.innerHTML = `
+    <div class="sum-kicker">${esc(tile.name)}</div>
+    <div class="sum-title" id="sum-title">${titles[reason]}</div>
+    <div class="sum-points">+${correct}</div>
+    <div class="sum-sub">${esc(teamName(T.team))} · ${correct} correct · ${skipped} skipped</div>
+    <div class="mini-scores">${[0, 1].map(i => `<div class="mini t${i + 1} ${i === T.team ? 'hl' : ''}"><span class="n">${esc(teamName(i))}</span><span class="s">${S.scores[i]}</span></div>`).join('')}</div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-gold btn-xl" id="sum-continue">${last ? 'See Final Results 🏆' : 'Back to the Pyramid ▶'}</button>
+      ${nextLine}
+    </div>`;
+  $('#modal').classList.add('open');
+  modalOpenedAt = Date.now();
+  $('#sum-continue').addEventListener('click', closeSummary);
+}
+function closeSummary() {
+  $('#modal').classList.remove('open');
+  T = null;
+  if (playedCount() >= PER_ROUND) finishGame(); else showBoard();
+}
+
+/* =========================================================
+   FINAL
+   ========================================================= */
+function finishGame() {
+  S.phase = 'final';
+  store.del(LS.save);
+  const [a, b] = S.scores, tie = a === b, w = a > b ? 0 : 1;
+  $('#final-results').innerHTML = `
+    <div class="winner-name ${tie ? 'tie' : 't' + (w + 1)}">${tie ? "It's a Tie!" : esc(teamName(w)) + ' wins!'}</div>
+    <p class="lead">${tie ? `Both teams finished with ${a} points. Everybody wins!` : `Victory by ${Math.abs(a - b)} point${Math.abs(a - b) === 1 ? '' : 's'}!`}</p>
+    <div class="res-teams">${[0, 1].map(i => `
+      <div class="res-team t${i + 1} ${!tie && i === w ? 'winner' : ''}">
+        <h3>${esc(teamName(i))}</h3>
+        <div class="big">${S.scores[i]}</div>
+      </div>`).join('')}</div>
+    <div class="actions">
+      <button type="button" class="btn btn-gold btn-xl" id="btn-rematch">↻ Rematch (same teams)</button>
+      <button type="button" class="btn btn-ghost" id="btn-newgame">New Game Setup</button>
+    </div>`;
+  $('#btn-rematch').addEventListener('click', () => startGame(S.config));
+  $('#btn-newgame').addEventListener('click', () => { confetti.stop(); S = null; initSetup(); showScreen('setup'); });
+  showScreen('final');
+  sfx.fanfare();
+  const colors = tie ? ['#22c3ff', '#ff3d8b', '#ffc83d', '#fff'] : [w ? '#ff3d8b' : '#22c3ff', '#ffc83d', '#fff'];
+  confetti.burst(colors, 220);
+  setTimeout(() => confetti.burst(colors, 160), 1400);
+  setTimeout(() => confetti.burst(colors, 160), 2800);
+}
+
+/* =========================================================
+   GLOBAL CONTROLS
+   ========================================================= */
+$('#btn-sound').addEventListener('click', () => {
+  soundOn = !soundOn; updateSoundBtn();
+  if (S) { S.config.sound = soundOn; if (!T) save(); }
+  const s = store.get(LS.setup); if (s) { s.sound = soundOn; store.set(LS.setup, s); }
+  if (soundOn) sfx.select();
+});
+$('#btn-quit').addEventListener('click', () => {
+  if (!confirm('End this game and return to setup? All progress will be lost.')) return;
+  if (T) stopClock();
+  T = null; S = null; store.del(LS.save);
+  $('#modal').classList.remove('open');
+  initSetup(); showScreen('setup');
+});
+
+/* keep keyboard shortcuts from double-firing on a focused button */
+document.addEventListener('click', e => { const b = e.target.closest('button'); if (b) b.blur(); });
+
+document.addEventListener('keydown', e => {
+  if ((e.target.matches && e.target.matches('input, textarea, select')) || e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if ($('#modal').classList.contains('open')) {
+    if ((k === ' ' || k === 'enter') && !e.repeat && Date.now() - modalOpenedAt > 900) { e.preventDefault(); closeSummary(); }
+    else if (k === ' ') e.preventDefault();
+    return;
+  }
+  if (!$('#scr-play').classList.contains('active') || !T) return;
+  if (k === ' ' || k === 'enter') {
+    e.preventDefault(); if (e.repeat) return;
+    if (!T.started) startTurn(); else markCorrect();
+  } else if (k.startsWith('arrow')) { e.preventDefault(); if (!e.repeat) markSkip(); }
+});
+
+/* warn before leaving mid-turn */
+addEventListener('beforeunload', e => { if (T && T.started && !T.over) { e.preventDefault(); e.returnValue = ''; } });
+
+initSetup();
+updateSoundBtn();
+})();
+</script>
+</body>
+</html>
