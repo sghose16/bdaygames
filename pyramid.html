@@ -326,7 +326,7 @@ main{flex:1;display:flex;flex-direction:column}
             <div class="answer-card covered" id="answer-card"><div id="answer-body"></div></div>
             <div class="progress">
               <div class="dots" id="dots"></div>
-              <div class="count"><b id="count">0</b>/10</div>
+              <div class="count"><b id="count">0</b>/<span id="count-total">10</span></div>
             </div>
           </div>
         </div>
@@ -365,92 +365,24 @@ main{flex:1;display:flex;flex-direction:column}
      QUESTION DATABASE
      ---------------------------------------------------------
      To add a category, append an object to the array below:
-       { id: <unique number>, name: "...", difficulty: "easy"|"medium"|"hard",
-         answers: [ at least 10 strings ] }
-     If a category has more than 10 answers, 10 are picked at random each game.
+       { id: <unique number>, name: "...",
+         answers: [ list of answers ] }
+     Each category plays all of its answers (up to 10, picked at random if there are more).
      ========================================================= -->
 <script>
 window.CATEGORY_DB = [
-  { id: 1,  name: "Things You Find at the Beach", difficulty: "easy",   answers: ["Sunscreen","Sandcastle","Seashell","Beach Ball","Umbrella","Lifeguard","Surfboard","Towel","Flip-Flops","Seagull"] },
-  { id: 2,  name: "Things in a Kitchen",           difficulty: "easy",   answers: ["Refrigerator","Toaster","Spatula","Blender","Microwave","Oven Mitt","Cutting Board","Dishwasher","Frying Pan","Kettle"] },
-  { id: 3,  name: "Farm Animals",                  difficulty: "easy",   answers: ["Cow","Pig","Chicken","Goat","Sheep","Horse","Duck","Turkey","Donkey","Rooster"] },
-  { id: 4,  name: "Breakfast Foods",               difficulty: "easy",   answers: ["Pancakes","Waffles","Bacon","Omelet","Cereal","French Toast","Bagel","Oatmeal","Hash Browns","Yogurt"] },
-  { id: 5,  name: "Things With Wheels",            difficulty: "easy",   answers: ["Bicycle","Skateboard","Shopping Cart","Wheelbarrow","Stroller","Bus","Roller Skates","Car","Train","Wagon"] },
-  { id: 6,  name: "Things That Are Cold",          difficulty: "easy",   answers: ["Ice Cube","Snowman","Igloo","Freezer","Popsicle","Glacier","Antarctica","Snowball","Iceberg","North Pole"] },
-  { id: 7,  name: "Jobs in a Hospital",            difficulty: "medium", answers: ["Doctor","Nurse","Surgeon","Pharmacist","Paramedic","Receptionist","Janitor","Radiologist","Pediatrician","Security Guard"] },
-  { id: 8,  name: "Things at a Birthday Party",    difficulty: "easy",   answers: ["Cake","Candles","Balloons","Presents","Party Hat","Piñata","Wrapping Paper","Streamers","Goody Bag","Birthday Song"] },
-  { id: 9,  name: "Sports Played With a Ball",     difficulty: "easy",   answers: ["Soccer","Basketball","Tennis","Baseball","Golf","Volleyball","Bowling","Rugby","Football","Cricket"] },
-  { id: 10, name: "Things in a Bathroom",          difficulty: "easy",   answers: ["Toothbrush","Shower","Towel","Mirror","Bathtub","Soap","Toilet Paper","Sink","Toilet","Shampoo"] },
-  { id: 11, name: "Musical Instruments",           difficulty: "easy",   answers: ["Piano","Guitar","Drums","Violin","Trumpet","Flute","Harmonica","Saxophone","Cello","Tuba"] },
-  { id: 12, name: "Things That Fly",               difficulty: "easy",   answers: ["Airplane","Helicopter","Kite","Butterfly","Rocket","Hot Air Balloon","Eagle","Bat","Drone","Paper Airplane"] },
-  { id: 13, name: "Things in a Classroom",         difficulty: "easy",   answers: ["Chalkboard","Desk","Backpack","Pencil Sharpener","Globe","Textbook","Teacher","Eraser","Ruler","Whiteboard"] },
-  { id: 14, name: "Pizza Toppings",                difficulty: "easy",   answers: ["Pepperoni","Mushrooms","Olives","Pineapple","Sausage","Onions","Extra Cheese","Bell Peppers","Ham","Anchovies"] },
-  { id: 15, name: "Things That Are Red",           difficulty: "easy",   answers: ["Fire Truck","Strawberry","Stop Sign","Tomato","Ladybug","Rose","Lipstick","Cherry","Apple","Fire Hydrant"] },
-  { id: 16, name: "Camping Gear",                  difficulty: "medium", answers: ["Tent","Sleeping Bag","Flashlight","Campfire","Marshmallows","Compass","Bug Spray","Lantern","Canoe","Hiking Boots"] },
-  { id: 17, name: "Things in the Sky",             difficulty: "easy",   answers: ["Cloud","Rainbow","Moon","Star","Sun","Lightning","Comet","Bird","Kite","Sunset"] },
-  { id: 18, name: "Zoo Animals",                   difficulty: "easy",   answers: ["Elephant","Giraffe","Lion","Zebra","Monkey","Penguin","Hippo","Gorilla","Kangaroo","Polar Bear"] },
-  { id: 19, name: "Things You Wear in Winter",     difficulty: "easy",   answers: ["Mittens","Scarf","Boots","Earmuffs","Parka","Beanie","Wool Socks","Gloves","Snow Pants","Sweater"] },
-  { id: 20, name: "Things in an Office",           difficulty: "medium", answers: ["Stapler","Printer","Paper Clip","Calendar","Swivel Chair","Water Cooler","Computer","Desk Lamp","Whiteboard","Sticky Notes"] },
-  { id: 21, name: "Things That Are Sticky",        difficulty: "medium", answers: ["Glue","Honey","Tape","Gum","Syrup","Cotton Candy","Spider Web","Jam","Slime","Caramel"] },
-  { id: 22, name: "Superpowers",                   difficulty: "medium", answers: ["Flying","Invisibility","Super Strength","Mind Reading","Time Travel","Teleportation","X-Ray Vision","Shape-Shifting","Super Speed","Healing"] },
-  { id: 23, name: "Things That Make Noise",        difficulty: "easy",   answers: ["Alarm Clock","Doorbell","Siren","Whistle","Thunder","Rooster","Vacuum Cleaner","Car Horn","Drum","Dog Barking"] },
-  { id: 24, name: "Things at the Movies",          difficulty: "easy",   answers: ["Popcorn","Tickets","Big Screen","3D Glasses","Previews","Usher","Soda","Candy","Nachos","Movie Star"] },
-  { id: 25, name: "Things in a Wallet",            difficulty: "medium", answers: ["Cash","Credit Card","Driver's License","Receipt","Coins","Photo","Gift Card","ID Card","Library Card","Business Card"] },
-  { id: 26, name: "Things at an Airport",          difficulty: "medium", answers: ["Passport","Suitcase","Security Line","Boarding Pass","Pilot","Runway","Baggage Claim","Flight Attendant","Departure Gate","Jet Lag"] },
-  { id: 27, name: "Desserts",                      difficulty: "easy",   answers: ["Brownie","Cheesecake","Apple Pie","Cupcake","Ice Cream Sundae","Cookie","Pudding","Tiramisu","Donut","Cobbler"] },
-  { id: 28, name: "Things That Are Round",         difficulty: "easy",   answers: ["Ball","Wheel","Coin","Pizza","Donut","Clock","Globe","Plate","Orange","Button"] },
-  { id: 29, name: "Things at a Wedding",           difficulty: "medium", answers: ["Bride","Ring","Bouquet","Veil","Wedding Cake","First Dance","Toast","Groom","Best Man","Flower Girl"] },
-  { id: 30, name: "Bugs and Insects",              difficulty: "easy",   answers: ["Ant","Bee","Mosquito","Ladybug","Grasshopper","Firefly","Caterpillar","Beetle","Cricket","Dragonfly"] },
-  { id: 31, name: "Things in a Garden",            difficulty: "easy",   answers: ["Flowers","Hose","Watering Can","Seeds","Earthworm","Garden Gnome","Rake","Tomato Plant","Bird Bath","Butterfly"] },
-  { id: 32, name: "Ocean Creatures",               difficulty: "easy",   answers: ["Shark","Whale","Octopus","Dolphin","Jellyfish","Starfish","Sea Turtle","Seahorse","Crab","Stingray"] },
-  { id: 33, name: "Fruits",                        difficulty: "easy",   answers: ["Banana","Apple","Watermelon","Grapes","Mango","Pineapple","Cherry","Strawberry","Peach","Kiwi"] },
-  { id: 34, name: "Vegetables",                    difficulty: "easy",   answers: ["Carrot","Broccoli","Potato","Corn","Lettuce","Cucumber","Spinach","Peas","Tomato","Onion"] },
-  { id: 35, name: "Things You Do in the Morning",  difficulty: "medium", answers: ["Brush Your Teeth","Take a Shower","Make Coffee","Get Dressed","Eat Breakfast","Hit Snooze","Make the Bed","Check Your Phone","Comb Your Hair","Read the News"] },
-  { id: 36, name: "Things That Have Keys",         difficulty: "hard",   answers: ["Piano","Computer Keyboard","Car","Map","House","Treasure Chest","Diary","Typewriter","Hotel Room","Answer Key"] },
-  { id: 37, name: "Things You Recycle",            difficulty: "medium", answers: ["Newspaper","Plastic Bottle","Soda Can","Cardboard Box","Glass Jar","Magazine","Milk Jug","Aluminum Foil","Cereal Box","Juice Carton"] },
-  { id: 38, name: "Things in a Toolbox",           difficulty: "medium", answers: ["Hammer","Screwdriver","Wrench","Pliers","Tape Measure","Nails","Level","Saw","Drill","Duct Tape"] },
-  { id: 39, name: "Holidays",                      difficulty: "easy",   answers: ["Christmas","Halloween","Thanksgiving","New Year's Eve","Valentine's Day","Easter","Diwali","Hanukkah","Fourth of July","Mother's Day"] },
-  { id: 40, name: "Things at a Carnival",          difficulty: "easy",   answers: ["Ferris Wheel","Cotton Candy","Roller Coaster","Clown","Bumper Cars","Funnel Cake","Ring Toss","Prizes","Caramel Apple","Fun House"] },
-  { id: 41, name: "Types of Weather",              difficulty: "easy",   answers: ["Rain","Snow","Hurricane","Tornado","Fog","Hail","Sunshine","Thunderstorm","Wind","Sleet"] },
-  { id: 42, name: "Things That Are Hot",           difficulty: "easy",   answers: ["Sun","Fire","Lava","Stove","Desert","Hot Sauce","Coffee","Oven","Chili Pepper","Sauna"] },
-  { id: 43, name: "Things in a Bedroom",           difficulty: "easy",   answers: ["Bed","Pillow","Closet","Alarm Clock","Dresser","Lamp","Blanket","Nightstand","Rug","Curtains"] },
-  { id: 44, name: "Things You Can Fold",           difficulty: "hard",   answers: ["Paper","Laundry","Napkin","Map","Lawn Chair","Origami","Your Arms","Towel","Letter","Poker Hand"] },
-  { id: 45, name: "Fairy Tale Things",             difficulty: "medium", answers: ["Castle","Dragon","Princess","Magic Wand","Witch","Unicorn","Knight","Giant","Fairy Godmother","Enchanted Forest"] },
-  { id: 46, name: "Things With Stripes",           difficulty: "medium", answers: ["Zebra","Tiger","Candy Cane","Barber Pole","Bee","Flag","Crosswalk","Referee Shirt","Skunk","Barcode"] },
-  { id: 47, name: "Things in a Hotel",             difficulty: "medium", answers: ["Room Key","Front Desk","Room Service","Elevator","Mini Bar","Pool","Bellhop","Lobby","Housekeeping","Do Not Disturb Sign"] },
-  { id: 48, name: "Things You Pack for Vacation",  difficulty: "easy",   answers: ["Swimsuit","Toothbrush","Sunglasses","Phone Charger","Passport","Camera","Flip-Flops","Sunscreen","Book","Hat"] },
-  { id: 49, name: "Things in a Car",               difficulty: "medium", answers: ["Steering Wheel","Seat Belt","Glove Box","Radio","Rearview Mirror","Horn","Windshield Wipers","Gas Pedal","Headlights","Spare Tire"] },
-  { id: 50, name: "Ways to Say Hello",             difficulty: "hard",   answers: ["Hi","Hey","Howdy","Hola","Bonjour","What's Up","Good Morning","Yo","Greetings","Aloha"] },
-  { id: 51, name: "Things That Are Soft",          difficulty: "easy",   answers: ["Pillow","Kitten","Cotton Ball","Teddy Bear","Marshmallow","Feather","Blanket","Puppy","Cloud","Slippers"] },
-  { id: 52, name: "Things at the Grocery Store",   difficulty: "medium", answers: ["Cashier","Shopping Cart","Coupon","Produce","Checkout Lane","Deli Counter","Frozen Aisle","Bakery","Receipt","Cereal Aisle"] },
-  { id: 53, name: "Things That Bounce",            difficulty: "medium", answers: ["Basketball","Trampoline","Kangaroo","Rubber Ball","Pogo Stick","Bungee Jumper","Bouncy Castle","Bunny","Ping-Pong Ball","Tennis Ball"] },
-  { id: 54, name: "Things in Outer Space",         difficulty: "medium", answers: ["Planet","Astronaut","Asteroid","Black Hole","Satellite","Galaxy","Space Station","Moon","Sun","Meteor"] },
-  { id: 55, name: "Game Night Things",             difficulty: "medium", answers: ["Dice","Deck of Cards","Checkers","Chess","Game Board","Spinner","Hourglass","Score Pad","Tokens","Snacks"] },
-  { id: 56, name: "Things You Do at the Gym",      difficulty: "easy",   answers: ["Push-Ups","Treadmill","Lift Weights","Yoga","Jumping Jacks","Stretch","Sit-Ups","Squats","Lunges","Rowing Machine"] },
-  { id: 57, name: "Things That Are Yellow",        difficulty: "easy",   answers: ["Banana","School Bus","Lemon","Sunflower","Rubber Duck","Taxi","Corn","Pencil","Cheese","Canary"] },
-  { id: 58, name: "Things at a Restaurant",        difficulty: "easy",   answers: ["Menu","Waiter","Tip","Chef","Reservation","Napkin","The Check","Booth","Daily Specials","Host"] },
-  { id: 59, name: "Pets",                          difficulty: "easy",   answers: ["Dog","Cat","Goldfish","Hamster","Parrot","Rabbit","Turtle","Guinea Pig","Lizard","Snake"] },
-  { id: 60, name: "Things That Are Fast",          difficulty: "easy",   answers: ["Cheetah","Race Car","Rocket","Lightning","Jet","Speedboat","Roller Coaster","Bullet","Falcon","Sprinter"] },
-  { id: 61, name: "Things in a Park",              difficulty: "easy",   answers: ["Swing","Slide","Bench","Fountain","Picnic Table","Squirrel","Jogger","Seesaw","Duck Pond","Frisbee"] },
-  { id: 62, name: "Types of Dances",               difficulty: "medium", answers: ["Salsa","Tango","Ballet","Waltz","Hip-Hop","Tap Dance","Conga Line","Line Dance","Breakdance","Cha-Cha"] },
-  { id: 63, name: "Things You Do on a Phone",      difficulty: "easy",   answers: ["Send a Text","Make a Call","Take a Selfie","Play Games","Check Email","Scroll","Set an Alarm","Video Chat","Take a Photo","Check the Weather"] },
-  { id: 64, name: "Famous Landmarks",              difficulty: "medium", answers: ["Eiffel Tower","Statue of Liberty","Great Wall of China","Pyramids of Giza","Big Ben","Taj Mahal","Grand Canyon","Colosseum","Golden Gate Bridge","Mount Rushmore"] },
-  { id: 65, name: "Things That Melt",              difficulty: "medium", answers: ["Ice","Snowman","Chocolate","Candle","Butter","Cheese","Ice Cream","Crayon","Snow","Popsicle"] },
-  { id: 66, name: "Things With Wings",             difficulty: "easy",   answers: ["Bird","Bat","Airplane","Butterfly","Angel","Dragon","Dragonfly","Fairy","Chicken","Ladybug"] },
-  { id: 67, name: "Things in a Library",           difficulty: "medium", answers: ["Books","Librarian","Library Card","Bookshelf","Quiet Sign","Reading Table","Encyclopedia","Late Fee","Dictionary","Story Time"] },
-  { id: 68, name: "Things a Baby Uses",            difficulty: "easy",   answers: ["Diaper","Bottle","Pacifier","Crib","Rattle","Bib","Stroller","Baby Wipes","High Chair","Onesie"] },
-  { id: 69, name: "Things You Say When Surprised", difficulty: "hard",   answers: ["Wow","Oh My Gosh","No Way","Whoa","Really?","Holy Cow","You're Kidding","Yikes","Oh No","Get Out"] },
-  { id: 70, name: "Kinds of Shoes",                difficulty: "easy",   answers: ["Sneakers","Sandals","High Heels","Boots","Slippers","Flip-Flops","Loafers","Clogs","Cleats","Ballet Flats"] },
-  { id: 71, name: "Things at a Fire Station",      difficulty: "medium", answers: ["Fire Truck","Hose","Helmet","Ladder","Dalmatian","Fire Pole","Siren","Firefighter","Axe","Fire Extinguisher"] },
-  { id: 72, name: "Things That Can Be Broken",     difficulty: "hard",   answers: ["Promise","World Record","Heart","Silence","The Law","Habit","Window","Bone","Mirror","Piggy Bank"] },
-  { id: 73, name: "Things Fit for Royalty",        difficulty: "medium", answers: ["Crown","Throne","Castle","Scepter","Knight","Queen","Royal Wedding","Jewels","King","Palace"] },
-  { id: 74, name: "Things You Shake",              difficulty: "hard",   answers: ["Hands","Salt Shaker","Maracas","Snow Globe","Dice","Tambourine","Pom-Poms","Milkshake","Ketchup Bottle","Rattle"] },
-  { id: 75, name: "Things With a Shell",           difficulty: "medium", answers: ["Turtle","Snail","Egg","Crab","Peanut","Clam","Coconut","Oyster","Lobster","Armadillo"] },
-  { id: 76, name: "Things at a Sleepover",         difficulty: "easy",   answers: ["Sleeping Bag","Pajamas","Pillow Fight","Ghost Stories","Movie","Popcorn","Flashlight","Snacks","Truth or Dare","Air Mattress"] },
-  { id: 77, name: "Things in a Backyard",          difficulty: "easy",   answers: ["Grill","Fence","Swing Set","Lawn Mower","Doghouse","Sprinkler","Hammock","Garden","Patio","Treehouse"] },
-  { id: 78, name: "Things You Plug In",            difficulty: "medium", answers: ["Lamp","Toaster","Phone Charger","Hair Dryer","Television","Christmas Lights","Vacuum","Refrigerator","Computer","Blender"] },
-  { id: 79, name: "Things That Are Green",         difficulty: "easy",   answers: ["Grass","Frog","Lime","Broccoli","Shamrock","Pickle","Money","Leaf","Cucumber","Lettuce"] },
-  { id: 80, name: "Things With Buttons",           difficulty: "medium", answers: ["Shirt","Remote Control","Elevator","Calculator","Doorbell","Video Game Controller","Microwave","Keyboard","Coat","Phone"] }
+  { id: 1,  name: "Doorbusters",              answers: ["Long Line","Air Fryer","Flat-Screen TV","Coupon","Cyber Monday","Shopping Cart","Receipt","Gift Card","Price Tag","Wish List"] },
+  { id: 2,  name: "Things That Are Sticky",   answers: ["Glue","Honey","Tape","Gum","Syrup","Velcro","Tree Sap","Peanut Butter","Sticky Note","Caramel"] },
+  { id: 3,  name: "Junk Drawer",              answers: ["Batteries","Rubber Band","Takeout Menu","Scissors","Twist Tie","Spare Key","Birthday Candles","Flashlight","Soy Sauce Packet","Tape Measure"] },
+  { id: 4,  name: "Artificially Intelligent", answers: ["Robot","Chatbot","Algorithm","Prompt","Deepfake","Data Center","Smartphone","Password","Wi-Fi Router","Software Update"] },
+  { id: 5,  name: "Going Public",             answers: ["Stock","Wall Street","Investor","Shares","Opening Bell","Ticker Symbol","Bull Market","Dividend","Bear Market","Portfolio"] },
+  { id: 6,  name: "Grounded",                 answers: ["Delay","Boarding Pass","Layover","Gate","Runway","Carry-On","Standby","Turbulence","Overhead Bin","Seat Belt Sign"] },
+  { id: 7,  name: "Things That Pop",          answers: ["Popcorn","Balloon","Bubble Wrap","Champagne Cork","Pimple","Firecracker","Knuckles","Toaster","Soda Can","Ears"] },
+  { id: 8,  name: "At the Gym",               answers: ["Treadmill","Dumbbell","Locker Room","Sweatband","Personal Trainer","Yoga Mat","Protein Shake","Kettlebell","Water Bottle","Squat Rack"] },
+  { id: 9,  name: "Things in a Hotel",        answers: ["Room Key","Front Desk","Room Service","Elevator","Mini Bar","Pool","Bellhop","Lobby","Housekeeping","Do Not Disturb Sign"] },
+  { id: 10, name: "Things in Outer Space",    answers: ["Planet","Astronaut","Asteroid","Black Hole","Satellite","Galaxy","Space Station","Moon","Sun","Meteor"] },
+  { id: 11, name: "Things You Can Fold",      answers: ["Paper","Laundry","Napkin","Map","Lawn Chair","Origami","Your Arms","Towel","Letter","Poker Hand"] },
+  { id: 12, name: "Things at the Grocery Store", answers: ["Cashier","Shopping Cart","Coupon","Produce","Checkout Lane","Deli Counter","Frozen Aisle","Bakery","Receipt","Cereal Aisle"] }
 ];
 </script>
 
@@ -465,10 +397,10 @@ window.CATEGORY_DB = [
 const PER_ROUND = 6;
 const ANSWERS = 10;
 const RING_C = 2 * Math.PI * 54;
-const LS = { setup: 'cluePyramid.setup.v1', save: 'cluePyramid.save.v1', recent: 'cluePyramid.recent.v1' };
+const LS = { setup: 'cluePyramid.setup.v1', save: 'cluePyramid.save.v2', recent: 'cluePyramid.recent.v2' };
 
 const DB = (window.CATEGORY_DB || []).filter((c, i, arr) => {
-  const ok = c && c.id != null && c.name && Array.isArray(c.answers) && c.answers.length >= ANSWERS &&
+  const ok = c && c.id != null && c.name && Array.isArray(c.answers) && c.answers.length > 0 &&
              arr.findIndex(o => o.id === c.id) === i;
   if (!ok) console.warn('Clue Pyramid: skipping invalid/duplicate category', c);
   return ok;
@@ -586,9 +518,9 @@ function pickCategories(n) {
   picked.forEach(c => S.usedIds.push(c.id));
   const ids = picked.map(c => c.id);
   const cap = Math.max(0, DB.length - 2 * PER_ROUND);
-  store.set(LS.recent, recentArr.filter(id => !ids.includes(id)).concat(ids).slice(-cap));
+  store.set(LS.recent, recentArr.filter(id => !ids.includes(id)).concat(ids).slice(cap ? -cap : 0).slice(0, cap));
   return picked.map(c => ({
-    id: c.id, name: c.name, difficulty: c.difficulty || '',
+    id: c.id, name: c.name,
     answers: shuffle(c.answers).slice(0, ANSWERS),
     played: false, team: null, points: 0, skipped: 0
   }));
@@ -604,7 +536,7 @@ function initSetup() {
     $('#cfg-dur').value = saved.duration || 30;
     soundOn = saved.sound !== false;
   }
-  const g = store.get(LS.save);
+  const g = loadSavedGame();
   $('#btn-resume').hidden = !(g && g.phase && g.phase !== 'final');
 }
 
@@ -630,8 +562,17 @@ $('#setup-form').addEventListener('submit', e => {
   startGame(config);
 });
 
-$('#btn-resume').addEventListener('click', () => {
+/* A saved game is only resumable if every category on its board is still in CATEGORY_DB. */
+function loadSavedGame() {
   const g = store.get(LS.save);
+  const ok = g && Array.isArray(g.board) && g.board.length === PER_ROUND &&
+             g.board.every(t => DB.some(c => c.id === t.id && c.name === t.name));
+  if (!ok) { store.del(LS.save); return null; }
+  return g;
+}
+
+$('#btn-resume').addEventListener('click', () => {
+  const g = loadSavedGame();
   if (!g) { $('#btn-resume').hidden = true; return; }
   S = g; T = null; soundOn = S.config.sound !== false; updateSoundBtn();
   if (playedCount() >= PER_ROUND) finishGame(); else showBoard();
@@ -736,7 +677,7 @@ function prepareTurn(i) {
   const card = $('#answer-card'); card.className = 'answer-card covered';
   $('#answer-body').innerHTML = `<div class="cover-msg">
       <div class="big">Guesser, turn away from the screen!</div>
-      <div class="sm">${S.config.duration} seconds · ${ANSWERS} answers</div></div>`;
+      <div class="sm">${S.config.duration} seconds · ${T.items.length} answers</div></div>`;
   $('#answer-label').innerHTML = '';
   renderTimer(); renderProgress();
   renderScorebar();
@@ -801,6 +742,7 @@ function renderProgress() {
     return `<div class="dot ${it.status} ${cur ? 'current' : ''}" title="${it.status}">${sym}</div>`;
   }).join('');
   $('#count').textContent = T.items.filter(it => it.status === 'correct').length;
+  $('#count-total').textContent = T.items.length;
 }
 const canAct = () => T && T.started && !T.over && !T.paused;
 
@@ -830,7 +772,7 @@ function markSkip() {
 function advance() {
   if (T.mode === 'main') {
     T.mainIdx++;
-    if (T.mainIdx < ANSWERS) { T.cur = T.mainIdx; }
+    if (T.mainIdx < T.items.length) { T.cur = T.mainIdx; }
     else if (T.queue.length) { T.mode = 'revisit'; T.cur = T.queue.shift(); toast('Back to the skipped answers!'); }
     else { renderProgress(); endTurn('perfect'); return; }
   } else {
@@ -854,7 +796,7 @@ function endTurn(reason) {
   save();
   renderProgress();
   if (reason === 'time') { sfx.buzzer(); stamp("Time's up!", 'time'); setTimeout(() => showSummary(reason), 1500); }
-  else if (reason === 'perfect') { sfx.fanfare(); stamp('Perfect 10!', 'perfect'); confetti.burst(['#ffc83d', '#fff', T.team ? '#ff3d8b' : '#22c3ff'], 120); setTimeout(() => showSummary(reason), 1500); }
+  else if (reason === 'perfect') { sfx.fanfare(); stamp(`Perfect ${T.items.length}!`, 'perfect'); confetti.burst(['#ffc83d', '#fff', T.team ? '#ff3d8b' : '#22c3ff'], 120); setTimeout(() => showSummary(reason), 1500); }
   else setTimeout(() => showSummary(reason), 150);
 }
 
