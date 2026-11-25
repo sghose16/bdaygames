@@ -345,6 +345,11 @@ main{flex:1;display:flex;flex-direction:column}
       </div>
     </section>
 
+    <!-- ===================== ROUND BREAK ===================== -->
+    <section id="scr-round" class="screen">
+      <div class="results" id="round-results"></div>
+    </section>
+
     <!-- ===================== FINAL ===================== -->
     <section id="scr-final" class="screen">
       <div class="results" id="final-results"></div>
@@ -372,17 +377,17 @@ main{flex:1;display:flex;flex-direction:column}
 <script>
 window.CATEGORY_DB = [
   { id: 1,  name: "Doorbusters",              answers: ["Long Line","Air Fryer","Flat-Screen TV","Coupon","Cyber Monday","Shopping Cart","Receipt","Gift Card","Price Tag","Wish List"] },
-  { id: 2,  name: "Things That Are Sticky",   answers: ["Glue","Honey","Tape","Gum","Syrup","Velcro","Tree Sap","Peanut Butter","Sticky Note","Caramel"] },
-  { id: 3,  name: "Junk Drawer",              answers: ["Batteries","Rubber Band","Takeout Menu","Scissors","Twist Tie","Spare Key","Birthday Candles","Flashlight","Soy Sauce Packet","Tape Measure"] },
-  { id: 4,  name: "Artificially Intelligent", answers: ["Robot","Chatbot","Algorithm","Prompt","Deepfake","Data Center","Smartphone","Password","Wi-Fi Router","Software Update"] },
-  { id: 5,  name: "Going Public",             answers: ["Stock","Wall Street","Investor","Shares","Opening Bell","Ticker Symbol","Bull Market","Dividend","Bear Market","Portfolio"] },
+  { id: 2,  name: "Stuck On You",   answers: ["Glue","Honey","Tape","Gum","Syrup","Velcro","Tree Sap","Peanut Butter","Sticky Note","Caramel"] },
+  { id: 3,  name: "Every House Has One",              answers: ["Batteries","Rubber Band","Takeout Menu","Scissors","Twist Tie","Spare Key","Birthday Candles","Flashlight","Soy Sauce Packet","Tape Measure"] },
+  { id: 4,  name: "Artificially Intelligent", answers: ["Robot","Chatbot","Algorithm","Prompt","Deepfake","Data Center","Smartphone","Password","Outage","Update"] },
+  { id: 5,  name: "Show Me the Money",             answers: ["Stocks","Wall Street","Investor","Inflation","Opening Bell","Ticker Symbol","NVDIA","Dollar","Market","Portfolio"] },
   { id: 6,  name: "Grounded",                 answers: ["Delay","Boarding Pass","Layover","Gate","Runway","Carry-On","Standby","Turbulence","Overhead Bin","Seat Belt Sign"] },
-  { id: 7,  name: "Things That Pop",          answers: ["Popcorn","Balloon","Bubble Wrap","Champagne Cork","Pimple","Firecracker","Knuckles","Toaster","Soda Can","Ears"] },
-  { id: 8,  name: "At the Gym",               answers: ["Treadmill","Dumbbell","Locker Room","Sweatband","Personal Trainer","Yoga Mat","Protein Shake","Kettlebell","Water Bottle","Squat Rack"] },
-  { id: 9,  name: "Things in a Hotel",        answers: ["Room Key","Front Desk","Room Service","Elevator","Mini Bar","Pool","Bellhop","Lobby","Housekeeping","Do Not Disturb Sign"] },
-  { id: 10, name: "Things in Outer Space",    answers: ["Planet","Astronaut","Asteroid","Black Hole","Satellite","Galaxy","Space Station","Moon","Sun","Meteor"] },
-  { id: 11, name: "Things You Can Fold",      answers: ["Paper","Laundry","Napkin","Map","Lawn Chair","Origami","Your Arms","Towel","Letter","Poker Hand"] },
-  { id: 12, name: "Things at the Grocery Store", answers: ["Cashier","Shopping Cart","Coupon","Produce","Checkout Lane","Deli Counter","Frozen Aisle","Bakery","Receipt","Cereal Aisle"] }
+  { id: 7,  name: "Snap, Crackle...",          answers: ["Popcorn","Balloon","Bubble Wrap","Champagne Cork","Pimple","Firecracker","Knuckles","Toaster","Soda Can","Ears"] },
+  { id: 8,  name: "No Pain, No Gain",               answers: ["Treadmill","Dumbbell","Locker Room","Sweatband","Personal Trainer","Yoga Mat","Protein Shake","Kettlebell","Water Bottle","Squat Rack"] },
+  { id: 9,  name: "Checking In",        answers: ["Room Key","Front Desk","Room Service","Elevator","Mini Bar","Pool","Bellhop","Lobby","Housekeeping","Do Not Disturb Sign"] },
+  { id: 10, name: "Houston, We Have a Problem",    answers: ["Planet","Astronaut","Asteroid","Black Hole","Satellite","Galaxy","Space Station","Moon","Sun","Meteor"] },
+  { id: 11, name: "Fold Under Pressure",      answers: ["Paper","Laundry","Napkin","Map","Lawn Chair","Origami","Your Arms","Towel","Letter","Poker Hand"] },
+  { id: 12, name: "Clean-Up on Aisle 5", answers: ["Cashier","Shopping Cart","Coupon","Produce","Checkout Lane","Deli Counter","Frozen Aisle","Bakery","Receipt","Cereal Aisle"] }
 ];
 </script>
 
@@ -395,6 +400,7 @@ window.CATEGORY_DB = [
 
 /* ---------- constants & helpers ---------- */
 const PER_ROUND = 6;
+const ROUNDS = 2;
 const ANSWERS = 10;
 const RING_C = 2 * Math.PI * 54;
 const LS = { setup: 'cluePyramid.setup.v1', save: 'cluePyramid.save.v2', recent: 'cluePyramid.recent.v2' };
@@ -488,7 +494,7 @@ const confetti = (() => {
 /* ---------- UI helpers ---------- */
 function showScreen(name) {
   $$('.screen').forEach(s => s.classList.toggle('active', s.id === 'scr-' + name));
-  $('#scorebar').hidden = !(name === 'board' || name === 'play');
+  $('#scorebar').hidden = !(name === 'board' || name === 'play' || name === 'round');
   document.body.classList.remove('danger');
   window.scrollTo(0, 0);
 }
@@ -506,7 +512,7 @@ function updateSoundBtn() { $('#btn-sound').textContent = soundOn ? '🔊' : '�
 /* ---------- state helpers ---------- */
 const teamName = i => S.config.teams[i].name;
 const playedCount = () => S.board.filter(t => t.played).length;
-const currentTeam = () => playedCount() % 2;
+const currentTeam = () => (S.round - 1 + playedCount()) % 2;   // the starting team alternates each round
 function save() { if (S && S.phase !== 'final') store.set(LS.save, S); }
 
 function pickCategories(n) {
@@ -575,12 +581,14 @@ $('#btn-resume').addEventListener('click', () => {
   const g = loadSavedGame();
   if (!g) { $('#btn-resume').hidden = true; return; }
   S = g; T = null; soundOn = S.config.sound !== false; updateSoundBtn();
-  if (playedCount() >= PER_ROUND) finishGame(); else showBoard();
+  S.round = S.round || 1;
+  S.roundScores = S.roundScores || [S.scores.slice()];
+  if (playedCount() >= PER_ROUND) endRound(); else showBoard();
 });
 
 function startGame(config) {
   confetti.stop();
-  S = { config, scores: [0, 0], board: [], usedIds: [], phase: 'board' };
+  S = { config, round: 1, scores: [0, 0], roundScores: [[0, 0]], board: [], usedIds: [], phase: 'board' };
   T = null;
   $$('.ts-score').forEach(el => { el.dataset.v = 0; el.textContent = 0; });
   S.board = pickCategories(PER_ROUND);
@@ -614,7 +622,7 @@ function renderScorebar() {
     animateScore(i);
   });
   const n = T && !T.over ? playedCount() + 1 : Math.min(playedCount() + 1, PER_ROUND);
-  $('#sb-cat').textContent = `Category ${n} of ${PER_ROUND}`;
+  $('#sb-cat').textContent = `Round ${S.round} of ${ROUNDS} · Category ${n} of ${PER_ROUND}`;
 }
 function floater(team) {
   const card = $('#sb-' + team), f = document.createElement('div');
@@ -632,7 +640,7 @@ function showBoard() {
   const team = currentTeam();
   $('#upnext').innerHTML = `
     <div class="un-team t${team + 1}">${esc(teamName(team))}</div>
-    <div class="un-label">Pick a category</div>`;
+    <div class="un-label">Round ${S.round} · Pick a category</div>`;
   const rows = [[0], [1, 2], [3, 4, 5]];
   const pyr = $('#pyramid'); pyr.classList.remove('choosing');
   pyr.innerHTML = rows.map(row => `<div class="prow">${row.map(i => {
@@ -752,6 +760,7 @@ function markCorrect() {
   it.status = 'correct';
   S.board[T.i].points++;
   S.scores[T.team]++;
+  S.roundScores[S.round - 1][T.team]++;
   sfx.correct();
   const card = $('#answer-card'); card.classList.remove('good'); void card.offsetWidth; card.classList.add('good');
   renderScorebar(); floater(T.team);
@@ -835,7 +844,7 @@ function showSummary(reason) {
     <div class="sum-sub">${esc(teamName(T.team))} · ${correct} correct · ${skipped} skipped</div>
     <div class="mini-scores">${[0, 1].map(i => `<div class="mini t${i + 1} ${i === T.team ? 'hl' : ''}"><span class="n">${esc(teamName(i))}</span><span class="s">${S.scores[i]}</span></div>`).join('')}</div>
     <div class="modal-actions">
-      <button type="button" class="btn btn-gold btn-xl" id="sum-continue">${last ? 'See Final Results 🏆' : 'Back to the Pyramid ▶'}</button>
+      <button type="button" class="btn btn-gold btn-xl" id="sum-continue">${!last ? 'Back to the Pyramid ▶' : S.round < ROUNDS ? 'See Round Results ▶' : 'See Final Results 🏆'}</button>
       ${nextLine}
     </div>`;
   $('#modal').classList.add('open');
@@ -845,7 +854,41 @@ function showSummary(reason) {
 function closeSummary() {
   $('#modal').classList.remove('open');
   T = null;
-  if (playedCount() >= PER_ROUND) finishGame(); else showBoard();
+  if (playedCount() >= PER_ROUND) endRound(); else showBoard();
+}
+
+/* =========================================================
+   ROUND BREAK
+   ========================================================= */
+function endRound() {
+  if (S.round >= ROUNDS) { finishGame(); return; }
+  S.phase = 'round'; T = null; save();
+  const rs = S.roundScores[S.round - 1];
+  const nextTeam = S.round % 2;   // team that starts the next round
+  $('#round-results').innerHTML = `
+    <div class="winner-name tie">Round ${S.round} Complete</div>
+    <p class="lead">${rs[0] === rs[1] ? `Tied this round at ${rs[0]} each.` : `${esc(teamName(rs[0] > rs[1] ? 0 : 1))} won the round, ${Math.max(...rs)} to ${Math.min(...rs)}.`}</p>
+    <div class="res-teams">${[0, 1].map(i => `
+      <div class="res-team t${i + 1}">
+        <h3>${esc(teamName(i))}</h3>
+        <div class="big">${S.scores[i]}</div>
+        <div class="next-up">This round: ${rs[i]}</div>
+      </div>`).join('')}</div>
+    <div class="actions">
+      <button type="button" class="btn btn-gold btn-xl" id="btn-next-round">Start Round ${S.round + 1} ▶</button>
+    </div>
+    <p class="next-up" style="margin-top:14px">New pyramid · <b>${esc(teamName(nextTeam))}</b> goes first</p>`;
+  $('#btn-next-round').addEventListener('click', () => {
+    S.round++;
+    S.roundScores.push([0, 0]);
+    S.board = pickCategories(PER_ROUND);
+    S.phase = 'board';
+    save();
+    showBoard();
+  });
+  renderScorebar();
+  showScreen('round');
+  sfx.fanfare();
 }
 
 /* =========================================================
@@ -862,6 +905,7 @@ function finishGame() {
       <div class="res-team t${i + 1} ${!tie && i === w ? 'winner' : ''}">
         <h3>${esc(teamName(i))}</h3>
         <div class="big">${S.scores[i]}</div>
+        <div class="next-up">${S.roundScores.map((r, k) => `Round ${k + 1}: ${r[i]}`).join(' · ')}</div>
       </div>`).join('')}</div>
     <div class="actions">
       <button type="button" class="btn btn-gold btn-xl" id="btn-rematch">↻ Rematch (same teams)</button>
